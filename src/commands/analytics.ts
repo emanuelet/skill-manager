@@ -3,12 +3,14 @@ import { listSlugs } from '../core/skill.js';
 import { readMeta } from '../core/meta.js';
 import { getUsageStats, findUnusedSkills, type SkillMetaEntry } from '../core/analytics.js';
 import { formatTable, type Column } from '../utils/table.js';
+import { refreshUsage } from '../core/usage.js';
 
 interface AnalyticsOptions {
   json?: boolean;
 }
 
 export async function analyticsCommand(opts: AnalyticsOptions): Promise<void> {
+  await refreshUsage();
   const slugs = await listSlugs();
   const metas: SkillMetaEntry[] = [];
 

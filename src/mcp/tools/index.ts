@@ -19,21 +19,21 @@ export function registerTools(server: McpServer): void {
 
   server.tool(
     'get_skill',
-    'Read a skill\'s full content, metadata, and deployment info',
+    'Read one skill. Set include_content=false for metadata-only progressive disclosure.',
     getSkillSchema.shape,
     getSkillHandler,
   );
 
   server.tool(
     'search_skills',
-    'Search skills by name, description, tags, or content',
+    'Search ranked skill metadata by name, description, tags, aliases, intents, or content',
     searchSkillsSchema.shape,
     searchSkillsHandler,
   );
 
   server.tool(
     'deploy_skill',
-    'Deploy a skill to Claude Code and/or Codex CLI with automatic dependency resolution',
+    'Deploy a skill to Claude Code and/or the shared agents directory (Codex CLI and OpenCode) with automatic dependency resolution',
     deploySkillSchema.shape,
     deploySkillHandler,
   );

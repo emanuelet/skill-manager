@@ -1,19 +1,9 @@
 import chalk from 'chalk';
-import { listSkills } from '../core/skill.js';
+import { searchSkills } from '../core/search.js';
 import { getLinkRecords } from '../core/state.js';
 
 export async function searchCommand(query: string): Promise<void> {
-  const skills = await listSkills();
-  const q = query.toLowerCase();
-
-  const matches = skills.filter((skill) => {
-    if (skill.slug.includes(q)) return true;
-    if (skill.name.toLowerCase().includes(q)) return true;
-    if (skill.description.toLowerCase().includes(q)) return true;
-    if (skill.tags.some((t) => t.toLowerCase().includes(q))) return true;
-    if (skill.content.content.toLowerCase().includes(q)) return true;
-    return false;
-  });
+  const matches = await searchSkills(query);
 
   if (matches.length === 0) {
     console.log(chalk.yellow(`No skills matching "${query}".`));

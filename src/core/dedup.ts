@@ -81,6 +81,16 @@ export function buildScannedFile(
     source,
     slug,
     content,
-    hash: hashContent(content),
+    // Tool exporters often rewrite YAML quoting or omit nonstandard fields.
+    // Identity is the instruction body, so metadata-only drift does not clone a skill.
+    hash: instructionHash(content),
   };
+}
+
+export function instructionHash(content: string): string {
+  return hashContent(content.replace(/^---\s*\n[\s\S]*?\n---\s*\n?/, ''));
+}
+
+export function duplicateBaseSlug(slug: string): string | null {
+  return slug.match(/^(.+)-\d+$/)?.[1] ?? null;
 }

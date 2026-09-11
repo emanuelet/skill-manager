@@ -5,10 +5,11 @@ import { skillMetaFile } from '../fs/paths.js';
 import { SkillNotFoundError, SmError } from '../utils/errors.js';
 
 const SourceSchema = z.object({
-  type: z.enum(['imported', 'created', 'git', 'adopted']),
+  type: z.enum(['imported', 'created', 'git', 'adopted', 'bifrost']),
   importedFrom: z.string().optional(),
   originalPath: z.string().nullish(),
   repo: z.string().optional(),
+  sourceId: z.string().optional(),
 });
 
 const DeployAsSchema = z.object({

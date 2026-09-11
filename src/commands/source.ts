@@ -17,6 +17,7 @@ import { sourceRepoDir } from '../fs/paths.js';
 import { importSingleSkill, checkSkillConflict } from './_import-helpers.js';
 import { formatTable } from '../utils/table.js';
 import { SourceError, SourceNotFoundError } from '../utils/errors.js';
+import { validateRemoteSkill } from '../core/security.js';
 
 export async function sourceAddCommand(
   url: string,
@@ -54,6 +55,8 @@ export async function sourceAddCommand(
     await addSourceEntry({
       name,
       url,
+      kind: 'git',
+      trustLevel: 'UNTRUSTED',
       addedAt: new Date().toISOString(),
       lastSync: new Date().toISOString(),
       skillCount: skills.length,
@@ -101,6 +104,7 @@ export async function sourceAddCommand(
     for (const skill of toInstall) {
       try {
         const content = await fs.readFile(skill.filePath, 'utf-8');
+        validateRemoteSkill(content, 'UNTRUSTED', opts.force);
 
         if (skill.installed) {
           const status = await checkSkillConflict(skill.slug, content);

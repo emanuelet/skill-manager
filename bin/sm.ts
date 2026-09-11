@@ -3,6 +3,7 @@ import { importCommand } from '../src/commands/import.js';
 import { listCommand } from '../src/commands/list.js';
 import { addCommand } from '../src/commands/add.js';
 import { removeCommand } from '../src/commands/remove.js';
+import { reconcileDuplicatesCommand } from '../src/commands/reconcile.js';
 import { syncCommand } from '../src/commands/sync.js';
 import { infoCommand } from '../src/commands/info.js';
 import { doctorCommand } from '../src/commands/doctor.js';
@@ -23,6 +24,7 @@ import { sourceAddCommand, sourceListCommand, sourceSyncCommand, sourceRemoveCom
 import { packListCommand, packInstallCommand } from '../src/commands/pack.js';
 import { publishCommand } from '../src/commands/publish.js';
 import { generateCommand } from '../src/commands/generate.js';
+import { bifrostSyncCommand } from '../src/commands/bifrost.js';
 import { resolveInstallTarget, isSourceUrl, isGitHubShorthand } from '../src/core/install-resolver.js';
 import { loadConfig } from '../src/core/config.js';
 import { setLogLevel } from '../src/utils/logger.js';
@@ -102,6 +104,17 @@ program
     withErrorHandler(async (name, opts) => {
       validateSlug(name as string);
       await removeCommand(name as string, opts);
+    }),
+  );
+
+program
+  .command('dedupe')
+  .description('Merge identical numbered canonical duplicates (dry-run by default)')
+  .option('--apply', 'Apply the reconciliation')
+  .option('--prefer-agents', 'For differing pairs, replace the base with the agents version')
+  .action(
+    withErrorHandler(async (opts) => {
+      await reconcileDuplicatesCommand(opts);
     }),
   );
 
@@ -364,6 +377,9 @@ program
 
 // Source management subcommand group
 const source = program.command('source').description('Manage remote skill repositories');
+
+const bifrost = program.command('bifrost').description('Synchronize the Bifrost skill source');
+bifrost.command('sync').option('--url <url>', 'Bifrost base URL').action(withErrorHandler(async (opts) => { await bifrostSyncCommand(opts); }));
 
 source
   .command('add <url>')

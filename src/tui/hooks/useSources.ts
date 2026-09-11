@@ -101,6 +101,8 @@ export function useSources() {
         await addSourceEntry({
           name,
           url,
+          kind: 'git',
+          trustLevel: 'UNTRUSTED',
           addedAt: new Date().toISOString(),
           lastSync: new Date().toISOString(),
           skillCount: skills.length,

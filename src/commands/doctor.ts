@@ -17,8 +17,10 @@ import { readMeta } from '../core/meta.js';
 import { findStaleSkills, findUnusedSkills, type SkillMetaEntry } from '../core/analytics.js';
 import { getDirectDeps } from '../core/deps.js';
 import { loadSourcesRegistry } from '../core/sources.js';
+import { refreshUsage } from '../core/usage.js';
 
 export async function doctorCommand(): Promise<void> {
+  await refreshUsage();
   console.log(chalk.bold('\n🩺 Skill Manager — Health Check\n'));
 
   let issues = 0;

@@ -10,12 +10,14 @@ import {
   projectCCSkillsDir,
   projectCodexSkillsDir,
   skillDir,
+  skillFile,
   type ToolName,
   type DeployFormat,
 } from '../fs/paths.js';
 import { isSymlink, safeReadlink } from '../fs/links.js';
 import { skillExists } from './skill.js';
 import { slugify } from '../utils/slug.js';
+import { hashContent } from './hash.js';
 import { loadConfig } from './config.js';
 import {
   getLastAdoptScan,
@@ -294,7 +296,24 @@ export async function autoAdopt(opts?: AutoAdoptOpts): Promise<AdoptResult> {
         continue;
       }
 
-      // Resolve unique slug
+      // Identical copies from different tool directories represent one skill,
+      // not a naming conflict. Add the missing deployment without duplicating it.
+      const requestedSlug = slugify(entry.slug);
+      if (requestedSlug && await skillExists(requestedSlug)) {
+        const existing = await fs.readFile(skillFile(requestedSlug), 'utf-8');
+        if (hashContent(existing) === hashContent(content)) {
+          await fs.remove(entry.originalPath);
+          if (entry.scope === 'project' && entry.projectRoot) {
+            await deployToProject(requestedSlug, entry.tool, entry.projectRoot);
+          } else {
+            await deploy(requestedSlug, entry.tool);
+          }
+          result.adopted.push({ originalSlug: entry.slug, finalSlug: requestedSlug, path: entry.originalPath });
+          continue;
+        }
+      }
+
+      // Different content keeps the existing conflict-suffix behavior.
       finalSlug = await resolveUniqueSlug(entry.slug);
       const deployAs = buildDeployAs(entry.tool, entry.format);
 

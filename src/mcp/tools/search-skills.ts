@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { listSkills } from '../../core/skill.js';
+import { searchSkills } from '../../core/search.js';
 import { getLinkRecords } from '../../core/state.js';
 import { withToolHandler } from './helpers.js';
 
@@ -9,17 +9,7 @@ export const searchSkillsSchema = z.object({
 
 export const searchSkillsHandler = withToolHandler(
   async (args: z.infer<typeof searchSkillsSchema>) => {
-    const skills = await listSkills();
-    const q = args.query.toLowerCase();
-
-    const matches = skills.filter((skill) => {
-      if (skill.slug.includes(q)) return true;
-      if (skill.name.toLowerCase().includes(q)) return true;
-      if (skill.description.toLowerCase().includes(q)) return true;
-      if (skill.tags.some((t) => t.toLowerCase().includes(q))) return true;
-      if (skill.content.content.toLowerCase().includes(q)) return true;
-      return false;
-    });
+    const matches = await searchSkills(args.query);
 
     const links = await getLinkRecords();
 

@@ -24,8 +24,11 @@ export async function createLink(target: string, linkPath: string): Promise<void
     const existing = await safeReadlink(linkPath);
     if (existing === target) return; // Already correct
 
-    // Remove existing (could be file, dir, or broken link)
-    await fs.remove(linkPath);
+    if (!existing) {
+      throw new LinkError(`Refusing to overwrite non-symlink path: ${linkPath}`);
+    }
+    // Replace only an existing managed link (including a broken link).
+    await fs.unlink(linkPath);
   }
 
   // Atomic: create in temp location, then rename
@@ -36,30 +39,6 @@ export async function createLink(target: string, linkPath: string): Promise<void
   } catch (err) {
     // Cleanup temp if rename failed
     await fs.remove(tempLink).catch(() => {});
-
-    // On Windows, symlinks require Developer Mode or admin privileges.
-    // For directories, fall back to junctions (no elevated privileges needed).
-    if (isWindowsPermError(err)) {
-      const targetIsDir = await fs
-        .stat(target)
-        .then((s) => s.isDirectory())
-        .catch(() => false);
-      if (targetIsDir) {
-        try {
-          await fs.symlink(target, tempLink, 'junction');
-          await fs.rename(tempLink, linkPath);
-          return;
-        } catch (junctionErr) {
-          await fs.remove(tempLink).catch(() => {});
-          throw new LinkError(`Failed to create junction: ${linkPath} -> ${target}: ${junctionErr}`);
-        }
-      }
-      throw new LinkError(
-        `Permission denied creating symlink: ${linkPath} -> ${target}\n` +
-          `On Windows, symlinks require Developer Mode or administrator privileges.\n` +
-          `Enable Developer Mode: Settings → Update & Security → For Developers → Developer Mode`,
-      );
-    }
 
     throw new LinkError(`Failed to create symlink: ${linkPath} -> ${target}: ${err}`);
   }
@@ -168,13 +147,4 @@ export async function safeReadlink(filePath: string): Promise<string | null> {
   } catch {
     return null;
   }
-}
-
-/**
- * Check if an error is a Windows symlink permission error (EPERM/ENOTSUP).
- */
-function isWindowsPermError(err: unknown): boolean {
-  if (process.platform !== 'win32') return false;
-  const code = (err as NodeJS.ErrnoException)?.code;
-  return code === 'EPERM' || code === 'ENOTSUP';
 }
