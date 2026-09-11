@@ -8,7 +8,7 @@ export default defineConfig({
   target: 'node24',
   platform: 'node',
   external: ['node:sqlite'],
-  splitting: false,
+  splitting: true,
   sourcemap: true,
   clean: true,
   dts: false,

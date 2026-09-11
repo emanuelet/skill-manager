@@ -1,31 +1,4 @@
 import { Command } from 'commander';
-import { importCommand } from '../src/commands/import.js';
-import { listCommand } from '../src/commands/list.js';
-import { addCommand } from '../src/commands/add.js';
-import { removeCommand } from '../src/commands/remove.js';
-import { reconcileDuplicatesCommand } from '../src/commands/reconcile.js';
-import { syncCommand } from '../src/commands/sync.js';
-import { infoCommand } from '../src/commands/info.js';
-import { doctorCommand } from '../src/commands/doctor.js';
-import { createCommand } from '../src/commands/create.js';
-import { editCommand } from '../src/commands/edit.js';
-import { searchCommand } from '../src/commands/search.js';
-import { convertCommand } from '../src/commands/convert.js';
-import { initCommand } from '../src/commands/init.js';
-import { installCommand } from '../src/commands/install.js';
-import { profileCommand } from '../src/commands/profile.js';
-import { backupCommand, restoreCommand, backupListCommand } from '../src/commands/backup.js';
-import { completionCommand } from '../src/commands/completion.js';
-import { historyCommand, rollbackCommand } from '../src/commands/history.js';
-import { suggestCommand } from '../src/commands/suggest.js';
-import { hooksRunCommand, hooksSetupCommand } from '../src/commands/hooks.js';
-import { analyticsCommand } from '../src/commands/analytics.js';
-import { sourceAddCommand, sourceListCommand, sourceSyncCommand, sourceRemoveCommand } from '../src/commands/source.js';
-import { packListCommand, packInstallCommand } from '../src/commands/pack.js';
-import { publishCommand } from '../src/commands/publish.js';
-import { generateCommand } from '../src/commands/generate.js';
-import { bifrostSyncCommand } from '../src/commands/bifrost.js';
-import { resolveInstallTarget, isSourceUrl, isGitHubShorthand } from '../src/core/install-resolver.js';
 import { loadConfig } from '../src/core/config.js';
 import { setLogLevel } from '../src/utils/logger.js';
 import { withErrorHandler, validateSlug, UsageError } from '../src/utils/errors.js';
@@ -58,6 +31,7 @@ program
   .option('--dry-run', 'Show what would be imported without making changes')
   .action(
     withErrorHandler(async (pathArg, opts) => {
+      const { importCommand } = await import('../src/commands/import.js');
       await importCommand({ ...opts, path: pathArg });
     }),
   );
@@ -72,6 +46,7 @@ program
   .option('--project', 'Show only project-scoped deployments for current directory')
   .action(
     withErrorHandler(async (opts) => {
+      const { listCommand } = await import('../src/commands/list.js');
       await listCommand(opts);
     }),
   );
@@ -87,6 +62,7 @@ program
   .action(
     withErrorHandler(async (name, opts) => {
       validateSlug(name as string);
+      const { addCommand } = await import('../src/commands/add.js');
       await addCommand(name as string, opts);
     }),
   );
@@ -103,6 +79,7 @@ program
   .action(
     withErrorHandler(async (name, opts) => {
       validateSlug(name as string);
+      const { removeCommand } = await import('../src/commands/remove.js');
       await removeCommand(name as string, opts);
     }),
   );
@@ -114,6 +91,7 @@ program
   .option('--prefer-agents', 'For differing pairs, replace the base with the agents version')
   .action(
     withErrorHandler(async (opts) => {
+      const { reconcileDuplicatesCommand } = await import('../src/commands/reconcile.js');
       await reconcileDuplicatesCommand(opts);
     }),
   );
@@ -125,6 +103,7 @@ program
   .option('--repair', 'Automatically repair broken links')
   .action(
     withErrorHandler(async (opts) => {
+      const { syncCommand } = await import('../src/commands/sync.js');
       await syncCommand(opts);
     }),
   );
@@ -135,6 +114,7 @@ program
   .action(
     withErrorHandler(async (name) => {
       validateSlug(name as string);
+      const { infoCommand } = await import('../src/commands/info.js');
       await infoCommand(name as string);
     }),
   );
@@ -144,6 +124,7 @@ program
   .description('Run health checks')
   .action(
     withErrorHandler(async () => {
+      const { doctorCommand } = await import('../src/commands/doctor.js');
       await doctorCommand();
     }),
   );
@@ -155,6 +136,7 @@ program
   .action(
     withErrorHandler(async (name, opts) => {
       validateSlug(name as string);
+      const { createCommand } = await import('../src/commands/create.js');
       await createCommand(name as string, opts);
     }),
   );
@@ -165,6 +147,7 @@ program
   .action(
     withErrorHandler(async (name) => {
       validateSlug(name as string);
+      const { editCommand } = await import('../src/commands/edit.js');
       await editCommand(name as string);
     }),
   );
@@ -174,6 +157,7 @@ program
   .description('Search skills by name, description, or tags')
   .action(
     withErrorHandler(async (query) => {
+      const { searchCommand } = await import('../src/commands/search.js');
       await searchCommand(query as string);
     }),
   );
@@ -184,6 +168,7 @@ program
   .action(
     withErrorHandler(async (name) => {
       validateSlug(name as string);
+      const { convertCommand } = await import('../src/commands/convert.js');
       await convertCommand(name as string);
     }),
   );
@@ -194,6 +179,7 @@ program
   .option('--from-current', 'Populate from currently deployed skills')
   .action(
     withErrorHandler(async (opts) => {
+      const { initCommand } = await import('../src/commands/init.js');
       await initCommand(opts);
     }),
   );
@@ -206,6 +192,7 @@ program
   .passThroughOptions()
   .action(
     withErrorHandler(async (args: string[], opts) => {
+      const { isSourceUrl, isGitHubShorthand, resolveInstallTarget } = await import('../src/core/install-resolver.js');
       // With passThroughOptions, our own flags after positional args end up in
       // args instead of opts. Two strategies based on input type:
       //
@@ -256,6 +243,7 @@ program
         if (opts.profile) {
           throw new UsageError('`--profile` cannot be combined with a source URL');
         }
+        const { sourceAddCommand } = await import('../src/commands/source.js');
         await sourceAddCommand(target.url, {
           install: true,
           slugs: target.slugs.length > 0 ? target.slugs : undefined,
@@ -263,6 +251,7 @@ program
         });
         return;
       }
+      const { installCommand } = await import('../src/commands/install.js');
       await installCommand(opts);
     }),
   );
@@ -272,6 +261,7 @@ program
   .description('Manage skill profiles (list|create|apply|delete)')
   .action(
     withErrorHandler(async (action, name) => {
+      const { profileCommand } = await import('../src/commands/profile.js');
       await profileCommand(action as string, name as string | undefined);
     }),
   );
@@ -281,6 +271,7 @@ program
   .description('Create a backup of all skills and links')
   .action(
     withErrorHandler(async () => {
+      const { backupCommand } = await import('../src/commands/backup.js');
       await backupCommand();
     }),
   );
@@ -290,6 +281,7 @@ program
   .description('Restore from a backup')
   .action(
     withErrorHandler(async (id) => {
+      const { restoreCommand } = await import('../src/commands/backup.js');
       await restoreCommand(id as string);
     }),
   );
@@ -299,6 +291,7 @@ program
   .description('List available backups')
   .action(
     withErrorHandler(async () => {
+      const { backupListCommand } = await import('../src/commands/backup.js');
       await backupListCommand();
     }),
   );
@@ -309,6 +302,7 @@ program
   .action(
     withErrorHandler(async (name) => {
       validateSlug(name as string);
+      const { historyCommand } = await import('../src/commands/history.js');
       await historyCommand(name as string);
     }),
   );
@@ -319,6 +313,7 @@ program
   .action(
     withErrorHandler(async (name, version) => {
       validateSlug(name as string);
+      const { rollbackCommand } = await import('../src/commands/history.js');
       await rollbackCommand(name as string, version as string | undefined);
     }),
   );
@@ -330,6 +325,7 @@ program
   .option('--json', 'Output as JSON')
   .action(
     withErrorHandler(async (opts) => {
+      const { suggestCommand } = await import('../src/commands/suggest.js');
       await suggestCommand(opts);
     }),
   );
@@ -339,6 +335,7 @@ program
   .description('Output shell completion script (bash|zsh|fish)')
   .action(
     withErrorHandler(async (shell) => {
+      const { completionCommand } = await import('../src/commands/completion.js');
       const script = completionCommand(shell as 'bash' | 'zsh' | 'fish');
       process.stdout.write(script);
     }),
@@ -352,6 +349,7 @@ hooks
   .option('--project', 'Write to project settings instead of global')
   .action(
     withErrorHandler(async (opts) => {
+      const { hooksSetupCommand } = await import('../src/commands/hooks.js');
       await hooksSetupCommand(opts);
     }),
   );
@@ -361,6 +359,7 @@ hooks
   .description('Execute a hook event (called by Claude Code)')
   .action(
     withErrorHandler(async (event) => {
+      const { hooksRunCommand } = await import('../src/commands/hooks.js');
       await hooksRunCommand(event as string);
     }),
   );
@@ -371,6 +370,7 @@ program
   .option('--json', 'Output as JSON')
   .action(
     withErrorHandler(async (opts) => {
+      const { analyticsCommand } = await import('../src/commands/analytics.js');
       await analyticsCommand(opts);
     }),
   );
@@ -379,7 +379,10 @@ program
 const source = program.command('source').description('Manage remote skill repositories');
 
 const bifrost = program.command('bifrost').description('Synchronize the Bifrost skill source');
-bifrost.command('sync').option('--url <url>', 'Bifrost base URL').action(withErrorHandler(async (opts) => { await bifrostSyncCommand(opts); }));
+bifrost.command('sync').option('--url <url>', 'Bifrost base URL').action(withErrorHandler(async (opts) => {
+  const { bifrostSyncCommand } = await import('../src/commands/bifrost.js');
+  await bifrostSyncCommand(opts);
+}));
 
 source
   .command('add <url>')
@@ -387,6 +390,7 @@ source
   .option('--install', 'Import all discovered skills immediately')
   .action(
     withErrorHandler(async (url, opts) => {
+      const { sourceAddCommand } = await import('../src/commands/source.js');
       await sourceAddCommand(url as string, opts);
     }),
   );
@@ -398,6 +402,7 @@ source
   .option('--json', 'Output as JSON')
   .action(
     withErrorHandler(async (opts) => {
+      const { sourceListCommand } = await import('../src/commands/source.js');
       await sourceListCommand(opts);
     }),
   );
@@ -407,6 +412,7 @@ source
   .description('Pull updates from one or all sources')
   .action(
     withErrorHandler(async (name) => {
+      const { sourceSyncCommand } = await import('../src/commands/source.js');
       await sourceSyncCommand({ name: name as string | undefined });
     }),
   );
@@ -418,6 +424,7 @@ source
   .option('--purge', 'Also delete the cloned repo from disk')
   .action(
     withErrorHandler(async (name, opts) => {
+      const { sourceRemoveCommand } = await import('../src/commands/source.js');
       await sourceRemoveCommand(name as string, opts);
     }),
   );
@@ -432,6 +439,7 @@ pack
   .option('--json', 'Output as JSON')
   .action(
     withErrorHandler(async (opts) => {
+      const { packListCommand } = await import('../src/commands/pack.js');
       await packListCommand(opts);
     }),
   );
@@ -442,6 +450,7 @@ pack
   .option('--dry-run', 'Show what would be installed')
   .action(
     withErrorHandler(async (name, opts) => {
+      const { packInstallCommand } = await import('../src/commands/pack.js');
       await packInstallCommand(name as string, opts);
     }),
   );
@@ -455,6 +464,7 @@ program
   .action(
     withErrorHandler(async (name, opts) => {
       validateSlug(name as string);
+      const { publishCommand } = await import('../src/commands/publish.js');
       await publishCommand(name as string, opts);
     }),
   );
@@ -506,12 +516,14 @@ const generateOpts = (cmd: Command) =>
 
 generateOpts(generate.command('claude-md').description('Generate CLAUDE.md')).action(
   withErrorHandler(async (opts) => {
+    const { generateCommand } = await import('../src/commands/generate.js');
     await generateCommand('claude-md', opts);
   }),
 );
 
 generateOpts(generate.command('agents-md').description('Generate AGENTS.md')).action(
   withErrorHandler(async (opts) => {
+    const { generateCommand } = await import('../src/commands/generate.js');
     await generateCommand('agents-md', opts);
   }),
 );
@@ -520,6 +532,7 @@ generateOpts(generate.command('both').description('Generate both CLAUDE.md and A
   .option('--symlink <mode>', 'Symlink mode: claude-to-agents, agents-to-claude, or none')
   .action(
     withErrorHandler(async (opts) => {
+      const { generateCommand } = await import('../src/commands/generate.js');
       await generateCommand('both', opts);
     }),
   );
