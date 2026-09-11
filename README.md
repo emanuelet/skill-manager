@@ -1,8 +1,12 @@
 # Skill Manager (`sm`)
 
-A unified tool for managing skills (instruction files) across **Claude Code** and **Codex CLI**. Instead of maintaining duplicate files in `~/.claude/commands/`, `~/.codex/prompts/`, and `~/.agents/skills/`, Skill Manager keeps a single canonical copy of each skill and deploys symlinks to wherever each tool expects them. Edit once, reflected everywhere.
+A unified tool for managing skills across **Claude Code**, **Codex CLI**, and **OpenCode**. `~/.agents/skills/` is shared by Codex and OpenCode; Claude Code uses `~/.claude/skills/`.
 
 ## Features
+
+- **Bifrost sync** — `sm bifrost sync` reconciles Bifrost with the canonical store by update time. Equal timestamps retain a local conflict copy and prefer Bifrost.
+- **Ranked retrieval** — SQLite FTS5, fuzzy matching, and usage-aware ranking power CLI and MCP search.
+- **Shared agents path** — `~/.agents/skills/` serves both Codex CLI and OpenCode.
 
 - **Canonical store** — All skills live in `~/.skill-manager/skills/`, organized as directories with `SKILL.md` files and metadata
 - **Symlink deployment** — Atomic symlinks into each tool's native directories; no files are duplicated
@@ -32,9 +36,9 @@ A unified tool for managing skills (instruction files) across **Claude Code** an
 
 ```bash
 git clone <repo-url> && cd skill-manager
-npm install
-npm run build
-npm link
+pnpm install
+pnpm build
+pnpm link --global
 ```
 
 This makes the `sm` command available globally.
@@ -617,7 +621,7 @@ sm pack list
 # Preview what a pack would install
 sm pack install anthropic-official --dry-run
 
-# Install a pack (clones repos, imports skills, deploys to CC + Codex)
+# Install a pack (clones repos, imports skills, deploys to Claude Code + agents)
 sm pack install anthropic-official
 ```
 
@@ -729,10 +733,10 @@ logLevel = "info"          # debug | info | warn | error
 ## Development
 
 ```bash
-npm run build              # Build with tsup
-npm run dev                # Watch mode
-npm run lint               # Type check
-npm test                   # Run tests
+pnpm build                 # Build with tsup
+pnpm dev                   # Watch mode
+pnpm lint                  # Type check
+pnpm test                  # Run tests
 ```
 
 The project uses TypeScript with ESM modules, built by `tsup`, with Ink v6 (React 19) for the TUI.
@@ -757,9 +761,9 @@ If commands fail with `EACCES` when reading or writing to the canonical store, f
 sudo chown -R "$(whoami)" ~/.skill-manager
 ```
 
-**Symlinks don't work on Windows**
+**Linux only**
 
-On Windows, symlinks require Developer Mode to be enabled or an elevated terminal. Go to Settings > Developer Settings > Enable Developer Mode. If you can't enable Developer Mode, `sm` will not work correctly on Windows.
+Skill Manager+ supports Linux only.
 
 **Skills not appearing after deploy**
 
