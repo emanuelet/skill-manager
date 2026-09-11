@@ -79,7 +79,7 @@ describe('MCP resource templates', () => {
       const content = await fsModule.default.readFile(mdPath, 'utf-8');
 
       const { registerResources } = await import('../../src/mcp/resources.js');
-      const { McpServer } = await import('@modelcontextprotocol/sdk/server/mcp.js');
+      const { McpServer } = await import('@modelcontextprotocol/server');
 
       const server = new McpServer({ name: 'test', version: '0.0.1' });
       registerResources(server);
@@ -99,7 +99,7 @@ describe('MCP resource templates', () => {
       await createTestSkill('beta', { name: 'Beta', description: 'Second', tags: ['b'] });
 
       const { registerResources } = await import('../../src/mcp/resources.js');
-      const { McpServer } = await import('@modelcontextprotocol/sdk/server/mcp.js');
+      const { McpServer } = await import('@modelcontextprotocol/server');
 
       const server = new McpServer({ name: 'test', version: '0.0.1' });
       registerResources(server);
@@ -115,6 +115,19 @@ describe('MCP resource templates', () => {
       const uris = listed.resources.map((r: { uri: string }) => r.uri).sort();
       expect(uris).toEqual(['skill://alpha', 'skill://beta']);
     });
+  });
+});
+
+describe('MCP tool registration', () => {
+  it('registers all tools with the v2 server API', async () => {
+    const { registerTools } = await import('../../src/mcp/tools/index.js');
+    const { McpServer } = await import('@modelcontextprotocol/server');
+    const server = new McpServer({ name: 'test', version: '0.0.1' });
+
+    registerTools(server);
+
+    const registeredTools = (server as unknown as { _registeredTools: Record<string, unknown> })._registeredTools;
+    expect(Object.keys(registeredTools)).toHaveLength(9);
   });
 });
 

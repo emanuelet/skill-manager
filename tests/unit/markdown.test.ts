@@ -11,6 +11,7 @@ describe('renderMarkdownToTerminal', () => {
     const result = renderMarkdownToTerminal('# Hello');
     expect(result.length).toBeGreaterThan(0);
     expect(result).toContain('Hello');
+    expect(result).not.toContain('<h1>');
   });
 
   it('converts bold text', () => {
@@ -21,6 +22,16 @@ describe('renderMarkdownToTerminal', () => {
   it('converts code span', () => {
     const result = renderMarkdownToTerminal('`code`');
     expect(result).toContain('code');
+  });
+
+  it('renders tables without HTML', () => {
+    const result = renderMarkdownToTerminal('| Name | Value |\n| --- | --- |\n| Foo | Bar |');
+    expect(result).toContain('Name | Value');
+    expect(result).not.toContain('<table>');
+  });
+
+  it('does not HTML-escape plain text', () => {
+    expect(renderMarkdownToTerminal('Node >=24')).toContain('Node >=24');
   });
 });
 

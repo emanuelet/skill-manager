@@ -75,7 +75,7 @@ async function uploadAttachments(baseUrl: string, slug: string): Promise<Record<
   for (const file of await localAttachments(slug)) {
     validateRemoteSkill(file.content.toString('utf8'), 'UNTRUSTED');
     const form = new FormData();
-    form.set('file', new Blob([file.content]), path.basename(file.path));
+    form.set('file', new Blob([new Uint8Array(file.content)]), path.basename(file.path));
     const result = await fetchJson<Record<string, unknown>>(`${baseUrl}/api/skills/files/upload`, { method: 'POST', body: form });
     uploaded.push({ ...result, path: file.path, source_type: 'upload' });
   }

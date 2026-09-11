@@ -1,4 +1,4 @@
-import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { McpServer } from '@modelcontextprotocol/server';
 import { listSkillsSchema, listSkillsHandler } from './list-skills.js';
 import { getSkillSchema, getSkillHandler } from './get-skill.js';
 import { searchSkillsSchema, searchSkillsHandler } from './search-skills.js';
@@ -10,66 +10,57 @@ import { listSourcesSchema, listSourcesHandler } from './list-sources.js';
 import { syncSourceSchema, syncSourceHandler } from './sync-source.js';
 
 export function registerTools(server: McpServer): void {
-  server.tool(
+  server.registerTool(
     'list_skills',
-    'List all managed skills with optional filtering by tag or deployment status',
-    listSkillsSchema.shape,
+    { description: 'List all managed skills with optional filtering by tag or deployment status', inputSchema: listSkillsSchema },
     listSkillsHandler,
   );
 
-  server.tool(
+  server.registerTool(
     'get_skill',
-    'Read one skill. Set include_content=false for metadata-only progressive disclosure.',
-    getSkillSchema.shape,
+    { description: 'Read one skill. Set include_content=false for metadata-only progressive disclosure.', inputSchema: getSkillSchema },
     getSkillHandler,
   );
 
-  server.tool(
+  server.registerTool(
     'search_skills',
-    'Search ranked skill metadata by name, description, tags, aliases, intents, or content',
-    searchSkillsSchema.shape,
+    { description: 'Search ranked skill metadata by name, description, tags, aliases, intents, or content', inputSchema: searchSkillsSchema },
     searchSkillsHandler,
   );
 
-  server.tool(
+  server.registerTool(
     'deploy_skill',
-    'Deploy a skill to Claude Code and/or the shared agents directory (Codex CLI and OpenCode) with automatic dependency resolution',
-    deploySkillSchema.shape,
+    { description: 'Deploy a skill to Claude Code and/or the shared agents directory (Codex CLI and OpenCode) with automatic dependency resolution', inputSchema: deploySkillSchema },
     deploySkillHandler,
   );
 
-  server.tool(
+  server.registerTool(
     'undeploy_skill',
-    'Remove a skill deployment from Claude Code and/or Codex CLI',
-    undeploySkillSchema.shape,
+    { description: 'Remove a skill deployment from Claude Code and/or Codex CLI', inputSchema: undeploySkillSchema },
     undeploySkillHandler,
   );
 
-  server.tool(
+  server.registerTool(
     'suggest_skills',
-    'Get trigger-based skill suggestions for a project directory',
-    suggestSkillsSchema.shape,
+    { description: 'Get trigger-based skill suggestions for a project directory', inputSchema: suggestSkillsSchema },
     suggestSkillsHandler,
   );
 
-  server.tool(
+  server.registerTool(
     'get_analytics',
-    'Get skill usage statistics, stale skills, and unused skills',
-    getAnalyticsSchema.shape,
+    { description: 'Get skill usage statistics, stale skills, and unused skills', inputSchema: getAnalyticsSchema },
     getAnalyticsHandler,
   );
 
-  server.tool(
+  server.registerTool(
     'list_sources',
-    'List configured remote skill sources with sync status',
-    listSourcesSchema.shape,
+    { description: 'List configured remote skill sources with sync status', inputSchema: listSourcesSchema },
     listSourcesHandler,
   );
 
-  server.tool(
+  server.registerTool(
     'sync_source',
-    'Sync one or all remote skill sources (git pull + rescan)',
-    syncSourceSchema.shape,
+    { description: 'Sync one or all remote skill sources (git pull + rescan)', inputSchema: syncSourceSchema },
     syncSourceHandler,
   );
 }
