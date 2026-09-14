@@ -1,16 +1,18 @@
 import chalk from 'chalk';
-import { getAnalyticsSnapshot } from '../core/analytics-snapshot.js';
+import { getAnalyticsSnapshot, getScopeRecommendations } from '../core/analytics-snapshot.js';
 import { formatTable, type Column } from '../utils/table.js';
 
 interface AnalyticsOptions {
   json?: boolean;
+  recommend?: boolean;
 }
 
 export async function analyticsCommand(opts: AnalyticsOptions): Promise<void> {
   const { stats, unused } = await getAnalyticsSnapshot();
+  const scopeRecommendations = opts.recommend ? await getScopeRecommendations() : undefined;
 
   if (opts.json) {
-    process.stdout.write(JSON.stringify(stats, null, 2) + '\n');
+    process.stdout.write(JSON.stringify(opts.recommend ? { stats, scopeRecommendations } : stats, null, 2) + '\n');
     return;
   }
 
@@ -47,6 +49,19 @@ export async function analyticsCommand(opts: AnalyticsOptions): Promise<void> {
     console.log(chalk.bold('\n  Unused skills (not used in 30+ days)'));
     for (const slug of unused) {
       console.log(chalk.yellow(`    ${slug}`));
+    }
+  }
+
+  if (scopeRecommendations) {
+    console.log(chalk.bold('\n  Scope recommendations'));
+    if (!scopeRecommendations.available) {
+      console.log(chalk.dim('    Unavailable: skilled usage data could not be read.'));
+    } else if (scopeRecommendations.recommendations.length === 0) {
+      console.log(chalk.dim('    No scope changes recommended.'));
+    } else {
+      for (const recommendation of scopeRecommendations.recommendations) {
+        console.log(`    ${recommendation.action}: ${recommendation.slug} (${recommendation.reason})`);
+      }
     }
   }
 

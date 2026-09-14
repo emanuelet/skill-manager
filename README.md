@@ -141,7 +141,7 @@ Without flags, `add` and `remove` target both tools. `add` auto-deploys dependen
 | Command               | Description                                                      |
 | --------------------- | ---------------------------------------------------------------- |
 | `sm suggest`          | Recommend skills for the current project based on triggers       |
-| `sm suggest --apply`  | Auto-deploy matching skills                                      |
+| `sm suggest --apply`  | Deploy matching skills to the current project                    |
 | `sm suggest --json`   | Output suggestions as JSON                                       |
 | `sm analytics`        | Show usage stats for all skills (uses, last used, last deployed) |
 | `sm analytics --json` | Output usage stats as JSON                                       |
@@ -156,9 +156,9 @@ Without flags, `add` and `remove` target both tools. `add` auto-deploys dependen
 
 ### MCP Server
 
-| Command                                                                   | Description                                              |
-| ------------------------------------------------------------------------- | -------------------------------------------------------- |
-| `sm mcp`                                                                  | Start the MCP server (stdio transport, used by AI tools) |
+| Command                                                                    | Description                                                               |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `sm mcp`                                                                   | Start the MCP server (stdio transport, used by AI tools)                  |
 | `sm mcp setup [--tool cc\|agents\|all] [--scope user\|project\|local]`     | Register the MCP server in Claude Code and/or the agent-compatible target |
 | `sm mcp uninstall [--tool cc\|agents\|all] [--scope user\|project\|local]` | Remove the MCP server from Claude Code and/or the agent-compatible target |
 
@@ -288,13 +288,13 @@ Every skill lives in `~/.skill-manager/skills/<slug>/`:
 
 The `deployAs` field in `.sm-meta.json` controls how each skill is exposed to each tool:
 
-| Format           | Link created                   | Points to                  |
-| ---------------- | ------------------------------ | -------------------------- |
-| `legacy-command` | `~/.claude/commands/<slug>.md` | `SKILL.md` (file link)     |
-| `legacy-prompt`  | `~/.codex/prompts/<slug>.md`   | `SKILL.md` (file link)     |
-| `skill` (CC)     | `~/.claude/skills/<slug>/`     | skill directory (dir link) |
+| Format           | Link created                   | Points to                        |
+| ---------------- | ------------------------------ | -------------------------------- |
+| `legacy-command` | `~/.claude/commands/<slug>.md` | `SKILL.md` (file link)           |
+| `legacy-prompt`  | `~/.codex/prompts/<slug>.md`   | `SKILL.md` (file link)           |
+| `skill` (CC)     | `~/.claude/skills/<slug>/`     | skill directory (dir link)       |
 | `skill` (Agents) | `~/.agents/skills/<slug>/`     | shared by Codex CLI and OpenCode |
-| `none`           | —                              | not deployed to that tool  |
+| `none`           | —                              | not deployed to that tool        |
 
 All symlink operations are atomic (create temp link, then rename).
 
@@ -454,7 +454,7 @@ Skill Manager automatically:
 1. Detects the unmanaged skill (scans on every CLI command, TUI startup, and MCP tool invocation)
 2. Imports it into `~/.skill-manager/skills/` with source metadata `'adopted'`
 3. Removes the original file/directory
-4. Deploys a symlink back to the canonical location
+4. Keeps user-level skills canonical-only; project-level skills are redeployed as symlinks
 5. For directory skills, copies extra files (`references/`, companion files) to the store
 6. Handles slug conflicts by appending numeric suffixes (`my-skill-2`, `my-skill-3`)
 
@@ -497,7 +497,7 @@ EOF
 # Run any sm command — auto-adopt runs first
 sm list
 # → Info: Auto-adopted 1 skill(s): my-utility
-# → The original directory is replaced with a symlink
+# → The original directory is removed; the skill stays canonical-only
 # → The skill is imported into ~/.skill-manager/skills/my-utility/
 ```
 
@@ -543,6 +543,8 @@ sm analytics --json
 Usage is tracked automatically by session hooks. `sm doctor` also reports unused skills (not used in 30+ days) as an informational check. `sm info <name>` shows per-skill usage stats.
 
 When [`skilled`](https://www.npmjs.com/package/@avcodes/skilled) is installed, analytics imports its ranked telemetry with `skilled list --sort count --no-index --json`. The combined analytics snapshot is cached at `~/.skill-manager/analytics-cache.json` for two minutes and shared by the CLI and MCP `sm_get_analytics` tool. Rebuild the telemetry index manually with `skilled index`; the next analytics request uses the rebuilt data after the cache expires.
+
+Run `sm analytics --recommend` to review opt-in deployment scope recommendations. SM keeps `skilled` as the usage source of truth and caches only its two-minute aggregate and per-skill detail snapshots. It recommends project scope after three uses in the current project within seven days, global scope after recent use in three projects within fourteen days, and demoting global skills unused for thirty days. Recommendations never change deployments automatically. `sm suggest --apply` also deploys only to the current project; deploy globally only through explicit `sm add <skill> --agents` or `--cc` commands.
 
 ## Remote Sources
 
@@ -699,7 +701,7 @@ Once registered, the AI assistant gains access to these tools:
 
 | Tool             | Description                                                                         |
 | ---------------- | ----------------------------------------------------------------------------------- |
-| `list_skills`    | List managed skills with `offset`/`limit` pagination and optional filters            |
+| `list_skills`    | List managed skills with `offset`/`limit` pagination and optional filters           |
 | `get_skill`      | Read a skill's full markdown content, metadata, and file listing                    |
 | `search_skills`  | Search skills by name, description, tags, or content body                           |
 | `deploy_skill`   | Deploy a skill to Claude Code and/or Codex CLI with automatic dependency resolution |

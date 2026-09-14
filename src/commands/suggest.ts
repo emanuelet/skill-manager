@@ -54,12 +54,12 @@ export async function suggestCommand(opts: SuggestOptions): Promise<void> {
   }
 
   if (opts.apply) {
-    console.log(chalk.bold('\nAuto-deploying suggestions...'));
+    console.log(chalk.bold('\nDeploying suggestions to this project...'));
     let deployed = 0;
     for (const s of suggestions) {
       if (s.isDeployed) continue;
       try {
-        deployed += await addCommand(s.slug, { all: true });
+        deployed += await addCommand(s.slug, { all: true, project: true });
       } catch (err) {
         console.log(chalk.yellow(`  ⚠ Could not deploy ${s.name}: ${err instanceof Error ? err.message : err}`));
       }

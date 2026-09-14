@@ -373,6 +373,33 @@ describe('MCP tool handlers', () => {
         await fs.remove(projectDir);
       }
     });
+
+    it('auto-deploys suggestions only to the requested project', async () => {
+      await createTestSkill('ts-project-helper', {
+        name: 'TypeScript Project Helper',
+        description: 'TypeScript support',
+        triggers: { files: ['tsconfig.json'] },
+      });
+
+      const projectDir = path.join(os.tmpdir(), `sm-mcp-suggest-deploy-${Date.now()}`);
+      await fs.ensureDir(projectDir);
+      await fs.writeFile(path.join(projectDir, 'tsconfig.json'), '{}', 'utf-8');
+
+      try {
+        const { suggestSkillsHandler } = await import('../../src/mcp/tools/suggest-skills.js');
+        const { getLinkRecords } = await import('../../src/core/state.js');
+        const result = await suggestSkillsHandler({ project_root: projectDir, auto_deploy: true });
+        const data = JSON.parse(result.content[0].text);
+
+        expect(data.deployed).toContain('ts-project-helper');
+        expect(
+          await getLinkRecords('ts-project-helper', { scope: 'project', projectRoot: projectDir }),
+        ).not.toHaveLength(0);
+        expect(await getLinkRecords('ts-project-helper', { scope: 'user' })).toHaveLength(0);
+      } finally {
+        await fs.remove(projectDir);
+      }
+    });
   });
 
   describe('get_analytics', () => {
@@ -409,8 +436,20 @@ describe('MCP tool handlers', () => {
 
     it('returns sources with derived status field', async () => {
       await seedSources([
-        { name: 'good-repo', url: 'https://github.com/org/good-repo', addedAt: '2025-01-01T00:00:00.000Z', lastSync: '2025-06-01T00:00:00.000Z', skillCount: 5 },
-        { name: 'bad-repo', url: 'https://github.com/org/bad-repo', addedAt: '2025-01-01T00:00:00.000Z', lastError: 'clone failed', skillCount: 0 },
+        {
+          name: 'good-repo',
+          url: 'https://github.com/org/good-repo',
+          addedAt: '2025-01-01T00:00:00.000Z',
+          lastSync: '2025-06-01T00:00:00.000Z',
+          skillCount: 5,
+        },
+        {
+          name: 'bad-repo',
+          url: 'https://github.com/org/bad-repo',
+          addedAt: '2025-01-01T00:00:00.000Z',
+          lastError: 'clone failed',
+          skillCount: 0,
+        },
       ]);
 
       const { listSourcesHandler } = await import('../../src/mcp/tools/list-sources.js');
@@ -525,11 +564,18 @@ describe('MCP tool handlers', () => {
 
     it('handles git failure gracefully', async () => {
       await seedSources([
-        { name: 'fail-repo', url: 'https://github.com/org/fail-repo', addedAt: '2025-01-01T00:00:00.000Z', skillCount: 0 },
+        {
+          name: 'fail-repo',
+          url: 'https://github.com/org/fail-repo',
+          addedAt: '2025-01-01T00:00:00.000Z',
+          skillCount: 0,
+        },
       ]);
 
       vi.doMock('../../src/sources/git.js', () => ({
-        cloneOrPull: vi.fn(async () => { throw new Error('network timeout'); }),
+        cloneOrPull: vi.fn(async () => {
+          throw new Error('network timeout');
+        }),
       }));
       vi.doMock('../../src/sources/scanner.js', () => ({
         scanSourceRepo: vi.fn(async () => []),

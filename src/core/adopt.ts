@@ -19,13 +19,9 @@ import { skillExists } from './skill.js';
 import { slugify } from '../utils/slug.js';
 import { hashContent } from './hash.js';
 import { loadConfig } from './config.js';
-import {
-  getLastAdoptScan,
-  updateLastAdoptScan,
-  resetStateCache,
-} from './state.js';
+import { getLastAdoptScan, updateLastAdoptScan, resetStateCache } from './state.js';
 import { importSingleSkill } from '../commands/_import-helpers.js';
-import { deploy, deployToProject } from '../deploy/engine.js';
+import { deployToProject } from '../deploy/engine.js';
 import { log } from '../utils/logger.js';
 
 const DEBOUNCE_MS = 10_000;
@@ -38,9 +34,9 @@ export interface AdoptResult {
 
 interface UnmanagedEntry {
   slug: string;
-  contentPath: string;  // path to .md file (for reading content)
+  contentPath: string; // path to .md file (for reading content)
   originalPath: string; // path to remove after adoption (file or directory)
-  dirLabel: string;     // which directory it was found in
+  dirLabel: string; // which directory it was found in
   tool: ToolName;
   format: DeployFormat;
   isDirectory: boolean;
@@ -71,7 +67,14 @@ function getUserScanTargets(): ScanTarget[] {
 function getProjectScanTargets(projectRoot: string): ScanTarget[] {
   return [
     { dir: projectCCSkillsDir(projectRoot), tool: 'cc', format: 'skill', isFlat: false, scope: 'project', projectRoot },
-    { dir: projectAgentsSkillsDir(projectRoot), tool: 'agents', format: 'skill', isFlat: false, scope: 'project', projectRoot },
+    {
+      dir: projectAgentsSkillsDir(projectRoot),
+      tool: 'agents',
+      format: 'skill',
+      isFlat: false,
+      scope: 'project',
+      projectRoot,
+    },
   ];
 }
 
@@ -99,9 +102,7 @@ async function findSkillFileInDir(dirPath: string): Promise<string | null> {
 /**
  * Detect unmanaged skill files/directories across all tool directories.
  */
-export async function detectUnmanaged(opts?: {
-  projectRoot?: string;
-}): Promise<UnmanagedEntry[]> {
+export async function detectUnmanaged(opts?: { projectRoot?: string }): Promise<UnmanagedEntry[]> {
   const targets = getUserScanTargets();
 
   if (opts?.projectRoot) {
@@ -111,14 +112,14 @@ export async function detectUnmanaged(opts?: {
     const agentsExists = await fs.pathExists(path.dirname(agentsDir)); // .agents/
     // Deduplicate: skip project targets that resolve to the same path as a user target
     // (e.g. when projectRoot is HOME)
-    const userDirs = new Set(targets.map(t => t.dir));
+    const userDirs = new Set(targets.map((t) => t.dir));
     if (ccExists) {
-      for (const t of getProjectScanTargets(opts.projectRoot).filter(t => t.tool === 'cc')) {
+      for (const t of getProjectScanTargets(opts.projectRoot).filter((t) => t.tool === 'cc')) {
         if (!userDirs.has(t.dir)) targets.push(t);
       }
     }
     if (agentsExists) {
-      for (const t of getProjectScanTargets(opts.projectRoot).filter(t => t.tool === 'agents')) {
+      for (const t of getProjectScanTargets(opts.projectRoot).filter((t) => t.tool === 'agents')) {
         if (!userDirs.has(t.dir)) targets.push(t);
       }
     }
@@ -232,7 +233,7 @@ export interface AutoAdoptOpts {
 }
 
 /**
- * Full auto-adopt workflow: detect unmanaged skills, import them, replace originals with symlinks.
+ * Full auto-adopt workflow: import unmanaged skills and retain project-local deployments only.
  */
 export async function autoAdopt(opts?: AutoAdoptOpts): Promise<AdoptResult> {
   const result: AdoptResult = { adopted: [], skipped: [], errors: [] };
@@ -299,14 +300,12 @@ export async function autoAdopt(opts?: AutoAdoptOpts): Promise<AdoptResult> {
       // Identical copies from different tool directories represent one skill,
       // not a naming conflict. Add the missing deployment without duplicating it.
       const requestedSlug = slugify(entry.slug);
-      if (requestedSlug && await skillExists(requestedSlug)) {
+      if (requestedSlug && (await skillExists(requestedSlug))) {
         const existing = await fs.readFile(skillFile(requestedSlug), 'utf-8');
         if (hashContent(existing) === hashContent(content)) {
           await fs.remove(entry.originalPath);
           if (entry.scope === 'project' && entry.projectRoot) {
             await deployToProject(requestedSlug, entry.tool, entry.projectRoot);
-          } else {
-            await deploy(requestedSlug, entry.tool);
           }
           result.adopted.push({ originalSlug: entry.slug, finalSlug: requestedSlug, path: entry.originalPath });
           continue;
@@ -352,16 +351,17 @@ export async function autoAdopt(opts?: AutoAdoptOpts): Promise<AdoptResult> {
       // Remove original file/directory
       await fs.remove(entry.originalPath);
 
-      // Deploy back to where it was found (creates the symlink)
+      // Preserve project-local availability. User-level skills stay canonical-only
+      // until explicitly promoted, keeping global agent catalogs empty by default.
       try {
         if (entry.scope === 'project' && entry.projectRoot) {
           await deployToProject(finalSlug, entry.tool, entry.projectRoot);
-        } else {
-          await deploy(finalSlug, entry.tool);
         }
       } catch (deployErr) {
         // Import succeeded but deploy failed — skill is in canonical store but no symlink
-        log.warn(`Adopted ${finalSlug} but deploy failed: ${deployErr instanceof Error ? deployErr.message : String(deployErr)}. Run "sm add ${finalSlug}" to fix.`);
+        log.warn(
+          `Adopted ${finalSlug} but deploy failed: ${deployErr instanceof Error ? deployErr.message : String(deployErr)}. Run "sm add ${finalSlug}" to fix.`,
+        );
         result.errors.push({
           path: entry.originalPath,
           error: `Imported but deploy failed: ${deployErr instanceof Error ? deployErr.message : String(deployErr)}`,
@@ -377,7 +377,11 @@ export async function autoAdopt(opts?: AutoAdoptOpts): Promise<AdoptResult> {
     } catch (err) {
       // Roll back partial import to prevent orphaned duplicates on next run
       if (finalSlug) {
-        try { await fs.remove(skillDir(finalSlug)); } catch { /* best-effort cleanup */ }
+        try {
+          await fs.remove(skillDir(finalSlug));
+        } catch {
+          /* best-effort cleanup */
+        }
       }
       result.errors.push({
         path: entry.originalPath,

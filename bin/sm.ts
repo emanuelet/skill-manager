@@ -371,6 +371,7 @@ program
   .command('analytics')
   .description('Show skill usage analytics')
   .option('--json', 'Output as JSON')
+  .option('--recommend', 'Suggest project/global skill scope changes from usage')
   .action(
     withErrorHandler(async (opts) => {
       const { analyticsCommand } = await import('../src/commands/analytics.js');
@@ -393,10 +394,15 @@ source
   );
 
 const bifrost = source.command('bifrost').description('Synchronize the Bifrost skill source');
-bifrost.command('sync').option('--url <url>', 'Bifrost base URL').action(withErrorHandler(async (opts) => {
-  const { bifrostSyncCommand } = await import('../src/commands/bifrost.js');
-  await bifrostSyncCommand(opts);
-}));
+bifrost
+  .command('sync')
+  .option('--url <url>', 'Bifrost base URL')
+  .action(
+    withErrorHandler(async (opts) => {
+      const { bifrostSyncCommand } = await import('../src/commands/bifrost.js');
+      await bifrostSyncCommand(opts);
+    }),
+  );
 
 source
   .command('list')

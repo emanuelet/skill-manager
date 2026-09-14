@@ -17,6 +17,15 @@ export interface UsageRecord {
   lastUsed?: string;
 }
 
+export interface UsageDetail {
+  skill: string;
+  count: number;
+  sessions: number;
+  firstUsed?: string;
+  lastUsed?: string;
+  projects: Array<{ name: string; count: number }>;
+}
+
 async function openUsageDb(): Promise<Database> {
   await fs.ensureDir(SM_HOME);
   const db = new DatabaseSync(SM_SEARCH_DB);
@@ -91,4 +100,31 @@ export async function usageBySlug(): Promise<Map<string, UsageRecord>> {
   } finally {
     db.close();
   }
+}
+
+/** Read detailed, optionally project-filtered usage from skilled. */
+export async function usageDetail(slug: string, project?: string): Promise<UsageDetail> {
+  const args = ['detail', slug, '--no-index', '--json'];
+  if (project) args.push('--project', project);
+
+  const { stdout } = await execFileAsync('skilled', args, {
+    maxBuffer: 5 * 1024 * 1024,
+    timeout: 1_000,
+  });
+  const parsed = JSON.parse(stdout) as Record<string, unknown>;
+  if (typeof parsed.skill !== 'string') throw new Error('Missing skill name');
+  if (!Array.isArray(parsed.projects)) throw new Error('Missing projects');
+
+  return {
+    skill: parsed.skill,
+    count: Number(parsed.count ?? 0),
+    sessions: Number(parsed.sessions ?? 0),
+    firstUsed: typeof parsed.firstUsed === 'string' ? parsed.firstUsed : undefined,
+    lastUsed: typeof parsed.lastUsed === 'string' ? parsed.lastUsed : undefined,
+    projects: parsed.projects.flatMap((value) => {
+      if (!value || typeof value !== 'object') return [];
+      const row = value as Record<string, unknown>;
+      return typeof row.name === 'string' ? [{ name: row.name, count: Number(row.count ?? 0) }] : [];
+    }),
+  };
 }

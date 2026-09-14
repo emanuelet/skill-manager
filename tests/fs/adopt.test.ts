@@ -138,7 +138,7 @@ describe('detectUnmanaged', () => {
     await fs.writeFile(path.join(ccSkillsDir, 'SKILL.md'), '# Project Skill', 'utf-8');
 
     const entries = await detectUnmanaged({ projectRoot });
-    const projectEntries = entries.filter(e => e.scope === 'project');
+    const projectEntries = entries.filter((e) => e.scope === 'project');
     expect(projectEntries).toHaveLength(1);
     expect(projectEntries[0].slug).toBe('proj-skill');
     expect(projectEntries[0].scope).toBe('project');
@@ -189,10 +189,9 @@ describe('autoAdopt', () => {
     expect(await fs.pathExists(path.join(SM_SKILLS_DIR, 'adopt-me', 'SKILL.md'))).toBe(true);
     expect(await fs.pathExists(path.join(SM_SKILLS_DIR, 'adopt-me', '.sm-meta.json'))).toBe(true);
 
-    // Original is now a symlink
+    // User-level adoption leaves the global catalog empty
     const linkPath = path.join(CC_COMMANDS_DIR, 'adopt-me.md');
-    const stat = await fs.lstat(linkPath);
-    expect(stat.isSymbolicLink()).toBe(true);
+    expect(await fs.pathExists(linkPath)).toBe(false);
 
     // Meta has adopted source
     const meta = await fs.readJson(path.join(SM_SKILLS_DIR, 'adopt-me', '.sm-meta.json'));
@@ -219,9 +218,8 @@ describe('autoAdopt', () => {
     // Canonical copy exists
     expect(await fs.pathExists(path.join(SM_SKILLS_DIR, 'dir-skill', 'SKILL.md'))).toBe(true);
 
-    // Original is replaced with a symlink
-    const stat = await fs.lstat(path.join(CC_SKILLS_DIR, 'dir-skill'));
-    expect(stat.isSymbolicLink()).toBe(true);
+    // User-level adoption leaves the global catalog empty
+    expect(await fs.pathExists(path.join(CC_SKILLS_DIR, 'dir-skill'))).toBe(false);
   });
 
   it('copies references/ when adopting a directory skill', async () => {
@@ -368,8 +366,7 @@ describe('autoAdopt', () => {
     await autoAdopt();
 
     const links = await getLinkRecords('tracked');
-    expect(links.length).toBeGreaterThan(0);
-    expect(links[0].tool).toBe('cc');
+    expect(links).toHaveLength(0);
   });
 
   it('adopts project-level skills with correct scope', async () => {
@@ -385,7 +382,7 @@ describe('autoAdopt', () => {
 
     const result = await autoAdopt({ projectRoot });
 
-    const projectAdopted = result.adopted.filter(a => a.finalSlug === 'proj-skill');
+    const projectAdopted = result.adopted.filter((a) => a.finalSlug === 'proj-skill');
     expect(projectAdopted).toHaveLength(1);
     expect(await fs.pathExists(path.join(SM_SKILLS_DIR, 'proj-skill', 'SKILL.md'))).toBe(true);
 
