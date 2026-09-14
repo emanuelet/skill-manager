@@ -144,12 +144,12 @@ export const GenerateConfigSchema = z.object({
     test: z.string().optional(),
     lint: z.string().optional(),
     dev: z.string().optional(),
-    extras: z.record(z.string()).optional(),
+    extras: z.record(z.string(), z.string()).optional(),
   }).passthrough().optional(),
 
   architecture: z.object({
     exclude: z.array(z.string()).optional(),
-    extras: z.record(z.string()).optional(),
+    extras: z.record(z.string(), z.string()).optional(),
   }).optional(),
 
   conventions: z.object({

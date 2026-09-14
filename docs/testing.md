@@ -5,8 +5,8 @@ The skill-manager test suite uses [Vitest](https://vitest.dev/) with 197 tests a
 ## Running Tests
 
 ```bash
-npm test                          # run all tests once
-npm run test:watch                # watch mode (re-runs on file changes)
+pnpm test                         # run all tests once
+pnpm test:watch                   # watch mode (re-runs on file changes)
 npx vitest run tests/unit/        # unit tests only
 npx vitest run tests/fs/          # FS layer tests only
 npx vitest run tests/deploy/      # deploy engine tests only

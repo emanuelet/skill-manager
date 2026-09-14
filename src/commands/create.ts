@@ -45,7 +45,7 @@ export async function createCommand(name: string, opts: CreateOptions): Promise<
 
   const meta = createMeta({
     source: { type: 'created' },
-    deployAs: { cc: 'skill', codex: 'skill' },
+    deployAs: { cc: 'skill', agents: 'skill' },
   });
   await writeMeta(slug, meta);
 

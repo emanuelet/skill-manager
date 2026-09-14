@@ -37,7 +37,7 @@ describe('createCommand', () => {
     const meta = await fs.readJson(skillMetaFile(slug));
     expect(meta.source.type).toBe('created');
     expect(meta.deployAs.cc).toBe('skill');
-    expect(meta.deployAs.codex).toBe('skill');
+    expect(meta.deployAs.agents).toBe('skill');
 
     expect(output.some((l) => l.includes('Created skill'))).toBe(true);
   });

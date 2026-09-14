@@ -5,17 +5,19 @@ import {
   CC_COMMANDS_DIR,
   CC_SKILLS_DIR,
   CODEX_PROMPTS_DIR,
-  CODEX_SKILLS_DIR,
+  AGENTS_SKILLS_DIR,
   CODEX_LEGACY_SKILLS_DIR,
   projectCCSkillsDir,
-  projectCodexSkillsDir,
+  projectAgentsSkillsDir,
   skillDir,
+  skillFile,
   type ToolName,
   type DeployFormat,
 } from '../fs/paths.js';
 import { isSymlink, safeReadlink } from '../fs/links.js';
 import { skillExists } from './skill.js';
 import { slugify } from '../utils/slug.js';
+import { hashContent } from './hash.js';
 import { loadConfig } from './config.js';
 import {
   getLastAdoptScan,
@@ -60,16 +62,16 @@ function getUserScanTargets(): ScanTarget[] {
   return [
     { dir: CC_COMMANDS_DIR, tool: 'cc', format: 'legacy-command', isFlat: true, scope: 'user' },
     { dir: CC_SKILLS_DIR, tool: 'cc', format: 'skill', isFlat: false, scope: 'user' },
-    { dir: CODEX_PROMPTS_DIR, tool: 'codex', format: 'legacy-prompt', isFlat: true, scope: 'user' },
-    { dir: CODEX_SKILLS_DIR, tool: 'codex', format: 'skill', isFlat: false, scope: 'user' },
-    { dir: CODEX_LEGACY_SKILLS_DIR, tool: 'codex', format: 'skill', isFlat: false, scope: 'user' },
+    { dir: CODEX_PROMPTS_DIR, tool: 'agents', format: 'legacy-prompt', isFlat: true, scope: 'user' },
+    { dir: AGENTS_SKILLS_DIR, tool: 'agents', format: 'skill', isFlat: false, scope: 'user' },
+    { dir: CODEX_LEGACY_SKILLS_DIR, tool: 'agents', format: 'skill', isFlat: false, scope: 'user' },
   ];
 }
 
 function getProjectScanTargets(projectRoot: string): ScanTarget[] {
   return [
     { dir: projectCCSkillsDir(projectRoot), tool: 'cc', format: 'skill', isFlat: false, scope: 'project', projectRoot },
-    { dir: projectCodexSkillsDir(projectRoot), tool: 'codex', format: 'skill', isFlat: false, scope: 'project', projectRoot },
+    { dir: projectAgentsSkillsDir(projectRoot), tool: 'agents', format: 'skill', isFlat: false, scope: 'project', projectRoot },
   ];
 }
 
@@ -104,9 +106,9 @@ export async function detectUnmanaged(opts?: {
 
   if (opts?.projectRoot) {
     const ccDir = projectCCSkillsDir(opts.projectRoot);
-    const codexDir = projectCodexSkillsDir(opts.projectRoot);
+    const agentsDir = projectAgentsSkillsDir(opts.projectRoot);
     const ccExists = await fs.pathExists(path.dirname(ccDir)); // .claude/
-    const codexExists = await fs.pathExists(path.dirname(codexDir)); // .agents/
+    const agentsExists = await fs.pathExists(path.dirname(agentsDir)); // .agents/
     // Deduplicate: skip project targets that resolve to the same path as a user target
     // (e.g. when projectRoot is HOME)
     const userDirs = new Set(targets.map(t => t.dir));
@@ -115,8 +117,8 @@ export async function detectUnmanaged(opts?: {
         if (!userDirs.has(t.dir)) targets.push(t);
       }
     }
-    if (codexExists) {
-      for (const t of getProjectScanTargets(opts.projectRoot).filter(t => t.tool === 'codex')) {
+    if (agentsExists) {
+      for (const t of getProjectScanTargets(opts.projectRoot).filter(t => t.tool === 'agents')) {
         if (!userDirs.has(t.dir)) targets.push(t);
       }
     }
@@ -219,7 +221,7 @@ export async function resolveUniqueSlug(baseSlug: string): Promise<string> {
 function buildDeployAs(tool: ToolName, format: DeployFormat) {
   return {
     cc: (tool === 'cc' ? format : 'none') as 'skill' | 'legacy-command' | 'none',
-    codex: (tool === 'codex' ? format : 'none') as 'skill' | 'legacy-prompt' | 'none',
+    agents: (tool === 'agents' ? format : 'none') as 'skill' | 'legacy-prompt' | 'none',
   };
 }
 
@@ -294,7 +296,24 @@ export async function autoAdopt(opts?: AutoAdoptOpts): Promise<AdoptResult> {
         continue;
       }
 
-      // Resolve unique slug
+      // Identical copies from different tool directories represent one skill,
+      // not a naming conflict. Add the missing deployment without duplicating it.
+      const requestedSlug = slugify(entry.slug);
+      if (requestedSlug && await skillExists(requestedSlug)) {
+        const existing = await fs.readFile(skillFile(requestedSlug), 'utf-8');
+        if (hashContent(existing) === hashContent(content)) {
+          await fs.remove(entry.originalPath);
+          if (entry.scope === 'project' && entry.projectRoot) {
+            await deployToProject(requestedSlug, entry.tool, entry.projectRoot);
+          } else {
+            await deploy(requestedSlug, entry.tool);
+          }
+          result.adopted.push({ originalSlug: entry.slug, finalSlug: requestedSlug, path: entry.originalPath });
+          continue;
+        }
+      }
+
+      // Different content keeps the existing conflict-suffix behavior.
       finalSlug = await resolveUniqueSlug(entry.slug);
       const deployAs = buildDeployAs(entry.tool, entry.format);
 

@@ -1,12 +1,12 @@
 import fs from 'fs-extra';
-import { ResourceTemplate, type McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { ResourceTemplate, type McpServer } from '@modelcontextprotocol/server';
 import { listSkills } from '../core/skill.js';
 import { skillFile } from '../fs/paths.js';
 import { validateSlug } from '../utils/errors.js';
 
 export function registerResources(server: McpServer): void {
   // Dynamic resource template: individual skill content
-  server.resource(
+  server.registerResource(
     'skill',
     new ResourceTemplate('skill://{slug}', {
       list: async () => {
@@ -40,7 +40,7 @@ export function registerResources(server: McpServer): void {
   );
 
   // Dynamic resource: full skill catalog
-  server.resource(
+  server.registerResource(
     'skill-catalog',
     'skill-catalog://all',
     { description: 'JSON list of all managed skills' },

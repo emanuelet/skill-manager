@@ -3,7 +3,7 @@ import { scanProjectSignals, matchSkillTriggers } from '../../core/triggers.js';
 import { deploy } from '../../deploy/engine.js';
 import { buildDepGraph, resolveDeps } from '../../core/deps.js';
 import { getLinkRecords } from '../../core/state.js';
-import { resolveProjectRoot, type ToolName } from '../../fs/paths.js';
+import { ALL_TOOLS, resolveProjectRoot, type ToolName } from '../../fs/paths.js';
 import { withToolHandler } from './helpers.js';
 
 export const suggestSkillsSchema = z.object({
@@ -19,7 +19,7 @@ export const suggestSkillsHandler = withToolHandler(
 
     if (args.auto_deploy) {
       const deployed: string[] = [];
-      const tools: ToolName[] = ['cc', 'codex'];
+      const tools: ToolName[] = ALL_TOOLS;
       const graph = await buildDepGraph();
 
       for (const s of suggestions) {

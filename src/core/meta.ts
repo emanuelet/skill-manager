@@ -5,16 +5,28 @@ import { skillMetaFile } from '../fs/paths.js';
 import { SkillNotFoundError, SmError } from '../utils/errors.js';
 
 const SourceSchema = z.object({
-  type: z.enum(['imported', 'created', 'git', 'adopted']),
+  type: z.enum(['imported', 'created', 'git', 'adopted', 'bifrost']),
   importedFrom: z.string().optional(),
   originalPath: z.string().nullish(),
   repo: z.string().optional(),
+  sourceId: z.string().optional(),
 });
 
-const DeployAsSchema = z.object({
-  cc: z.enum(['skill', 'legacy-command', 'none']).default('none'),
-  codex: z.enum(['skill', 'legacy-prompt', 'none']).default('none'),
-});
+const DeployAsSchema = z.preprocess(
+  (value) => {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+    const deployAs = { ...(value as Record<string, unknown>) };
+    if (deployAs.agents === undefined && deployAs.codex !== undefined) {
+      deployAs.agents = deployAs.codex;
+    }
+    delete deployAs.codex;
+    return deployAs;
+  },
+  z.object({
+    cc: z.enum(['skill', 'legacy-command', 'none']).default('none'),
+    agents: z.enum(['skill', 'legacy-prompt', 'none']).default('none'),
+  }),
+);
 
 export const MetaSchema = z.object({
   format: z.enum(['skill', 'legacy-command', 'legacy-prompt']).default('skill'),
@@ -84,7 +96,7 @@ export function createMeta(opts: {
     tags: opts.tags ?? [],
     deployAs: {
       cc: opts.deployAs?.cc ?? 'none',
-      codex: opts.deployAs?.codex ?? 'none',
+      agents: opts.deployAs?.agents ?? 'none',
     },
     createdAt: now,
     updatedAt: now,

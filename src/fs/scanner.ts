@@ -3,11 +3,13 @@ import path from 'path';
 import {
   CC_COMMANDS_DIR,
   CODEX_PROMPTS_DIR,
-  CODEX_SKILLS_DIR,
+  AGENTS_SKILLS_DIR,
   CODEX_LEGACY_SKILLS_DIR,
 } from './paths.js';
 import { buildScannedFile, type ScannedFile } from '../core/dedup.js';
 import { isSymlink, safeReadlink } from './links.js';
+import { parseSkillContent } from '../core/frontmatter.js';
+import { slugify } from '../utils/slug.js';
 
 export type ScanSource = 'cc-commands' | 'codex-prompts' | 'codex-skills' | 'agents-skills';
 
@@ -71,7 +73,13 @@ async function scanSource(source: ScanSource): Promise<ScanResult> {
           const skillMd = await findSkillFile(resolvedPath);
           if (skillMd) {
             const content = await fs.readFile(skillMd, 'utf-8');
-            result.files.push(buildScannedFile(fullPath, source, entry.name, content));
+            // A prior import may have added a numeric directory suffix. The
+            // frontmatter name is the stable skill identity across tools.
+            let slug = entry.name;
+            try {
+              slug = parseSkillContent(content).frontmatter.name ? slugify(parseSkillContent(content).frontmatter.name!) : slug;
+            } catch { /* retain directory name for malformed legacy skills */ }
+            result.files.push(buildScannedFile(fullPath, source, slug, content));
           }
         }
       }
@@ -93,7 +101,7 @@ function sourceDir(source: ScanSource): string {
     case 'codex-prompts':
       return CODEX_PROMPTS_DIR;
     case 'codex-skills':
-      return CODEX_SKILLS_DIR;
+      return AGENTS_SKILLS_DIR;
     case 'agents-skills':
       return CODEX_LEGACY_SKILLS_DIR;
   }

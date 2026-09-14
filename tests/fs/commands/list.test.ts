@@ -56,20 +56,20 @@ describe('listCommand', () => {
     expect(joined).not.toContain('not-deployed');
   });
 
-  it('filters by --codex when deployed to codex', async () => {
-    await createTestSkill('deployed-codex', { name: 'Codex Skill', description: 'Deployed to Codex' });
+  it('filters by --agents when deployed to the shared agents target', async () => {
+    await createTestSkill('deployed-agents', { name: 'Agents Skill', description: 'Deployed to shared agents' });
     await createTestSkill('not-deployed', { name: 'Not Deployed', description: 'No links' });
 
     const { deploy } = await import('../../../src/deploy/engine.js');
     const { resetStateCache } = await import('../../../src/core/state.js');
     resetStateCache();
-    await deploy('deployed-codex', 'codex');
+    await deploy('deployed-agents', 'agents');
 
     const { listCommand } = await import('../../../src/commands/list.js');
-    await listCommand({ codex: true });
+    await listCommand({ agents: true });
 
     const joined = output.join('\n');
-    expect(joined).toContain('deployed-codex');
+    expect(joined).toContain('deployed-agents');
     expect(joined).not.toContain('not-deployed');
   });
 

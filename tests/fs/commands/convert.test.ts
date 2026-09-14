@@ -38,7 +38,7 @@ describe('convertCommand', () => {
     const updatedMeta = await fs.default.readJson(skillMetaFile('legacy'));
     expect(updatedMeta.format).toBe('skill');
     expect(updatedMeta.deployAs.cc).toBe('skill');
-    expect(updatedMeta.deployAs.codex).toBe('skill');
+    expect(updatedMeta.deployAs.agents).toBe('skill');
     expect(output.some((l) => l.includes('Converted'))).toBe(true);
   });
 

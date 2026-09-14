@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { deduplicateFiles, buildScannedFile } from '../../src/core/dedup.js';
+import { deduplicateFiles, buildScannedFile, duplicateBaseSlug, instructionHash } from '../../src/core/dedup.js';
 
 describe('deduplicateFiles', () => {
   it('groups files with the same hash', () => {
@@ -28,6 +28,14 @@ describe('deduplicateFiles', () => {
     expect(slugs[1]).toMatch(/^foo-[a-f0-9]{8}$/);
   });
 
+  it('merges metadata-only variants from different tools', () => {
+    const files = [
+      buildScannedFile('/a/xurl.md', 'cc-commands', 'xurl', '---\nname: xurl\nmetadata: full\n---\n# Xurl'),
+      buildScannedFile('/b/xurl.md', 'codex-prompts', 'xurl', '---\nname: xurl\n---\n# Xurl'),
+    ];
+    expect(deduplicateFiles(files)).toHaveLength(1);
+  });
+
   it('picks canonical based on source priority', () => {
     const files = [
       buildScannedFile('/a/foo.md', 'codex-prompts', 'foo', 'same content'),
@@ -52,5 +60,16 @@ describe('deduplicateFiles', () => {
     expect(groups).toHaveLength(1);
     expect(groups[0].slug).toBe('bar');
     expect(groups[0].canonical.source).toBe('cc-commands');
+  });
+
+  it('identifies numbered duplicates by their canonical base slug', () => {
+    expect(duplicateBaseSlug('xurl-2')).toBe('xurl');
+    expect(duplicateBaseSlug('xurl')).toBeNull();
+  });
+
+  it('uses the instruction body as the identity hash', () => {
+    expect(instructionHash('---\nname: xurl\n---\n# Xurl')).toBe(
+      instructionHash('---\nname: xurl\ndescription: different\n---\n# Xurl'),
+    );
   });
 });

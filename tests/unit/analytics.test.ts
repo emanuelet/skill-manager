@@ -20,25 +20,19 @@ describe('findStaleSkills', () => {
   });
 
   it('returns skills with no lastDeployed', () => {
-    const metas: SkillMetaEntry[] = [
-      { slug: 'no-deploy', meta: makeMeta() },
-    ];
+    const metas: SkillMetaEntry[] = [{ slug: 'no-deploy', meta: makeMeta() }];
     expect(findStaleSkills(metas, 30)).toEqual(['no-deploy']);
   });
 
   it('returns skills deployed more than N days ago', () => {
     const old = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
-    const metas: SkillMetaEntry[] = [
-      { slug: 'old-skill', meta: makeMeta({ lastDeployed: old }) },
-    ];
+    const metas: SkillMetaEntry[] = [{ slug: 'old-skill', meta: makeMeta({ lastDeployed: old }) }];
     expect(findStaleSkills(metas, 30)).toEqual(['old-skill']);
   });
 
   it('excludes recently deployed skills', () => {
     const recent = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
-    const metas: SkillMetaEntry[] = [
-      { slug: 'recent-skill', meta: makeMeta({ lastDeployed: recent }) },
-    ];
+    const metas: SkillMetaEntry[] = [{ slug: 'recent-skill', meta: makeMeta({ lastDeployed: recent }) }];
     expect(findStaleSkills(metas, 30)).toEqual([]);
   });
 
@@ -58,9 +52,7 @@ describe('findStaleSkills', () => {
 
   it('uses the days parameter correctly', () => {
     const fiveDaysAgo = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
-    const metas: SkillMetaEntry[] = [
-      { slug: 'test', meta: makeMeta({ lastDeployed: fiveDaysAgo }) },
-    ];
+    const metas: SkillMetaEntry[] = [{ slug: 'test', meta: makeMeta({ lastDeployed: fiveDaysAgo }) }];
     // 3-day threshold: skill is stale
     expect(findStaleSkills(metas, 3)).toEqual(['test']);
     // 10-day threshold: skill is not stale
@@ -74,25 +66,19 @@ describe('findUnusedSkills', () => {
   });
 
   it('returns skills with no lastUsed', () => {
-    const metas: SkillMetaEntry[] = [
-      { slug: 'never-used', meta: makeMeta() },
-    ];
+    const metas: SkillMetaEntry[] = [{ slug: 'never-used', meta: makeMeta() }];
     expect(findUnusedSkills(metas, 30)).toEqual(['never-used']);
   });
 
   it('returns skills used more than N days ago', () => {
     const old = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
-    const metas: SkillMetaEntry[] = [
-      { slug: 'old-usage', meta: makeMeta({ lastUsed: old }) },
-    ];
+    const metas: SkillMetaEntry[] = [{ slug: 'old-usage', meta: makeMeta({ lastUsed: old }) }];
     expect(findUnusedSkills(metas, 30)).toEqual(['old-usage']);
   });
 
   it('excludes recently used skills', () => {
     const recent = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
-    const metas: SkillMetaEntry[] = [
-      { slug: 'active', meta: makeMeta({ lastUsed: recent, usageCount: 3 }) },
-    ];
+    const metas: SkillMetaEntry[] = [{ slug: 'active', meta: makeMeta({ lastUsed: recent, usageCount: 3 }) }];
     expect(findUnusedSkills(metas, 30)).toEqual([]);
   });
 
@@ -141,10 +127,17 @@ describe('getUsageStats', () => {
   });
 
   it('defaults usageCount to 0 for skills without it', () => {
-    const metas: SkillMetaEntry[] = [
-      { slug: 'no-count', meta: makeMeta() },
-    ];
+    const metas: SkillMetaEntry[] = [{ slug: 'no-count', meta: makeMeta() }];
     const stats = getUsageStats(metas);
     expect(stats[0].usageCount).toBe(0);
+  });
+
+  it('prefers indexed usage over canonical metadata', () => {
+    const usedAt = new Date().toISOString();
+    const metas: SkillMetaEntry[] = [{ slug: 'tracked', meta: makeMeta({ usageCount: 0 }) }];
+    const usage = new Map([['tracked', { useCount: 42, lastUsed: usedAt }]]);
+
+    expect(getUsageStats(metas, usage)[0]).toMatchObject({ usageCount: 42, lastUsed: usedAt });
+    expect(findUnusedSkills(metas, 30, usage)).toEqual([]);
   });
 });

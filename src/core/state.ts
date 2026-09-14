@@ -1,11 +1,11 @@
 import fs from 'fs-extra';
 import { z } from 'zod';
-import { SM_STATE_FILE, SM_HOME, resolveProjectRoot } from '../fs/paths.js';
+import { SM_STATE_FILE, SM_HOME, resolveProjectRoot, type ToolName } from '../fs/paths.js';
 import { SmError } from '../utils/errors.js';
 
 const LinkRecordSchema = z.object({
   slug: z.string(),
-  tool: z.enum(['cc', 'codex']),
+  tool: z.enum(['cc', 'agents', 'codex']).transform((tool) => tool === 'codex' ? 'agents' : tool),
   format: z.enum(['skill', 'legacy-command', 'legacy-prompt']),
   linkPath: z.string(),
   targetPath: z.string(),
@@ -77,7 +77,7 @@ export async function addLinkRecord(record: LinkRecord): Promise<void> {
 
 export async function removeLinkRecord(
   slug: string,
-  tool: 'cc' | 'codex',
+  tool: ToolName,
   scope: 'user' | 'project' = 'user',
   projectRoot?: string,
 ): Promise<void> {

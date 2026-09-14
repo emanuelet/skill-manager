@@ -6,10 +6,13 @@ import { SourceError } from '../utils/errors.js';
 export const SourceEntrySchema = z.object({
   name: z.string(),
   url: z.string(),
+  kind: z.enum(['git', 'bifrost']).default('git'),
+  trustLevel: z.enum(['TRUSTED', 'VERIFIED', 'UNTRUSTED']).default('UNTRUSTED'),
   addedAt: z.string(),
   lastSync: z.string().optional(),
   lastError: z.string().optional(),
   skillCount: z.number().default(0),
+  lastVersionSeen: z.string().optional(),
 });
 
 export type SourceEntry = z.infer<typeof SourceEntrySchema>;
@@ -48,10 +51,11 @@ export function resetSourcesCache(): void {
   cached = null;
 }
 
-export async function addSourceEntry(entry: SourceEntry): Promise<void> {
+export async function addSourceEntry(entry: z.input<typeof SourceEntrySchema>): Promise<void> {
+  const parsed = SourceEntrySchema.parse(entry);
   const registry = await loadSourcesRegistry();
-  registry.sources = registry.sources.filter((s) => s.name !== entry.name);
-  registry.sources.push(entry);
+  registry.sources = registry.sources.filter((s) => s.name !== parsed.name);
+  registry.sources.push(parsed);
   await saveSourcesRegistry(registry);
 }
 

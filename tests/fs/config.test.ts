@@ -20,7 +20,7 @@ describe('loadConfig', () => {
     resetConfigCache();
 
     const config = await loadConfig();
-    expect(config.defaultTools).toEqual(['cc', 'codex']);
+    expect(config.defaultTools).toEqual(['cc', 'agents']);
     expect(config.autoSync).toBe(true);
     expect(config.logLevel).toBe('info');
   });

@@ -6,7 +6,9 @@ import { ManifestError } from '../utils/errors.js';
 
 const ManifestSkillSchema = z.object({
   name: z.string(),
-  tools: z.array(z.enum(['cc', 'codex'])).default(['cc', 'codex']),
+  tools: z.array(z.enum(['cc', 'agents', 'codex'])).default(['cc', 'agents']).transform(
+    (tools) => [...new Set(tools.map((tool) => tool === 'codex' ? 'agents' : tool))],
+  ),
   scope: z.enum(['user', 'project']).default('user'),
 });
 

@@ -6,7 +6,9 @@ import { ConfigError } from '../utils/errors.js';
 
 const ConfigSchema = z.object({
   editor: z.string().optional(),
-  defaultTools: z.array(z.enum(['cc', 'codex'])).default(['cc', 'codex']),
+  defaultTools: z.array(z.enum(['cc', 'agents', 'codex'])).default(['cc', 'agents']).transform(
+    (tools) => [...new Set(tools.map((tool) => tool === 'codex' ? 'agents' : tool))],
+  ),
   autoSync: z.boolean().default(true),
   autoAdopt: z.boolean().default(true),
   logLevel: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
@@ -15,7 +17,7 @@ const ConfigSchema = z.object({
 export type Config = z.infer<typeof ConfigSchema>;
 
 const DEFAULT_CONFIG: Config = {
-  defaultTools: ['cc', 'codex'],
+  defaultTools: ['cc', 'agents'],
   autoSync: true,
   autoAdopt: true,
   logLevel: 'info',

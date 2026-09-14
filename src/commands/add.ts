@@ -9,6 +9,7 @@ import { SmError, SkillNotFoundError, CyclicDependencyError } from '../utils/err
 
 interface AddOptions {
   cc?: boolean;
+  agents?: boolean;
   codex?: boolean;
   all?: boolean;
   deps?: boolean;
@@ -29,7 +30,7 @@ export async function addCommand(name: string, opts: AddOptions): Promise<number
   const tools = isProject
     ? requestedTools  // Project scope always uses 'skill' format
     : requestedTools.filter((tool) => {
-        const format = tool === 'cc' ? meta.deployAs.cc : meta.deployAs.codex;
+        const format = tool === 'cc' ? meta.deployAs.cc : meta.deployAs.agents;
         return format !== 'none';
       });
 
@@ -98,9 +99,9 @@ export async function addCommand(name: string, opts: AddOptions): Promise<number
 }
 
 function resolveTools(opts: AddOptions): ToolName[] {
-  if (opts.all) return ['cc', 'codex'];
+  if (opts.all) return ['cc', 'agents'];
   const tools: ToolName[] = [];
   if (opts.cc) tools.push('cc');
-  if (opts.codex) tools.push('codex');
-  return tools.length > 0 ? tools : ['cc', 'codex'];
+  if (opts.agents || opts.codex) tools.push('agents');
+  return tools.length > 0 ? tools : ['cc', 'agents'];
 }

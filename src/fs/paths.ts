@@ -14,6 +14,10 @@ export const SM_LOGS_DIR = path.join(SM_HOME, 'logs');
 export const SM_CONFIG_FILE = path.join(SM_HOME, 'config.toml');
 export const SM_STATE_FILE = path.join(SM_HOME, 'state.json');
 export const SM_SOURCES_REGISTRY = path.join(SM_HOME, 'sources.json');
+export const SM_SEARCH_DB = path.join(SM_HOME, 'search.sqlite');
+export const SM_ANALYTICS_CACHE = path.join(SM_HOME, 'analytics-cache.json');
+export const SM_BIFROST_STATE_FILE = path.join(SM_HOME, 'bifrost.json');
+export const SM_CONFLICTS_DIR = path.join(SM_HOME, 'conflicts');
 
 // Bundled packs directory (relative to compiled output)
 const __filename = fileURLToPath(import.meta.url);
@@ -25,10 +29,12 @@ export const CC_HOME = path.join(HOME, '.claude');
 export const CC_COMMANDS_DIR = path.join(CC_HOME, 'commands');
 export const CC_SKILLS_DIR = path.join(CC_HOME, 'skills');
 
-// Codex paths
+// Agent-compatible tool paths (shared by Codex CLI and OpenCode)
 export const CODEX_HOME = path.join(HOME, '.codex');
 export const CODEX_PROMPTS_DIR = path.join(CODEX_HOME, 'prompts');
-export const CODEX_SKILLS_DIR = path.join(HOME, '.agents', 'skills');
+export const AGENTS_SKILLS_DIR = path.join(HOME, '.agents', 'skills');
+// Legacy export retained for callers compiled against pre-1.1.0 paths.
+export const CODEX_SKILLS_DIR = AGENTS_SKILLS_DIR;
 
 // Legacy Codex skills path (deprecated, scan-only)
 export const CODEX_LEGACY_SKILLS_DIR = path.join(CODEX_HOME, 'skills');
@@ -63,7 +69,7 @@ export function projectCCSkillsDir(projectRoot: string): string {
   return path.join(projectRoot, '.claude', 'skills');
 }
 
-export function projectCodexSkillsDir(projectRoot: string): string {
+export function projectAgentsSkillsDir(projectRoot: string): string {
   return path.join(projectRoot, '.agents', 'skills');
 }
 
@@ -82,32 +88,38 @@ export function backupDir(timestamp: string): string {
 }
 
 // Tool names
-export type ToolName = 'cc' | 'codex';
+export type ToolName = 'cc' | 'agents';
+type LegacyToolName = ToolName | 'codex';
+
+function normalizeToolName(tool: LegacyToolName): ToolName {
+  return tool === 'codex' ? 'agents' : tool;
+}
 
 // Deploy scope
 export type DeployScope = 'user' | 'project';
 
-export const ALL_TOOLS: ToolName[] = ['cc', 'codex'];
+export const ALL_TOOLS: ToolName[] = ['cc', 'agents'];
 
 // Deploy format
 export type DeployFormat = 'skill' | 'legacy-command' | 'legacy-prompt' | 'none';
 
 // Resolve the target directory for a given tool and deploy format
-export function deployTargetDir(tool: ToolName, format: DeployFormat): string | null {
+export function deployTargetDir(tool: LegacyToolName, format: DeployFormat): string | null {
+  tool = normalizeToolName(tool);
   switch (format) {
     case 'skill':
-      return tool === 'cc' ? CC_SKILLS_DIR : CODEX_SKILLS_DIR;
+      return tool === 'cc' ? CC_SKILLS_DIR : AGENTS_SKILLS_DIR;
     case 'legacy-command':
       return tool === 'cc' ? CC_COMMANDS_DIR : null;
     case 'legacy-prompt':
-      return tool === 'codex' ? CODEX_PROMPTS_DIR : null;
+      return tool === 'agents' ? CODEX_PROMPTS_DIR : null;
     case 'none':
       return null;
   }
 }
 
 // Resolve the full link path for a deployed skill
-export function deployLinkPath(tool: ToolName, format: DeployFormat, slug: string): string | null {
+export function deployLinkPath(tool: LegacyToolName, format: DeployFormat, slug: string): string | null {
   const dir = deployTargetDir(tool, format);
   if (!dir) return null;
 
@@ -133,9 +145,7 @@ export function resolveProjectRoot(projectRoot: string): string {
 
 // Project-level deploy target directory
 export function projectDeployTargetDir(tool: ToolName, projectRoot: string): string {
-  return tool === 'cc'
-    ? projectCCSkillsDir(projectRoot)
-    : projectCodexSkillsDir(projectRoot);
+  return tool === 'cc' ? projectCCSkillsDir(projectRoot) : projectAgentsSkillsDir(projectRoot);
 }
 
 // Project-level deploy link path

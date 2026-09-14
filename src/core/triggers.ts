@@ -25,6 +25,7 @@ export interface SkillSuggestion {
 export const TriggerSchema = z.object({
   files: z.array(z.string()).default([]),
   dirs: z.array(z.string()).default([]),
+  always: z.boolean().default(false),
 }).optional();
 
 const EXT_TO_LANGUAGE: Record<string, string> = {
@@ -113,9 +114,10 @@ export async function matchSkillTriggers(
 
     const triggers = parsed.data;
     const allPatterns = [...triggers.files, ...triggers.dirs];
-    if (allPatterns.length === 0) continue;
+    if (!triggers.always && allPatterns.length === 0) continue;
 
     const matched: string[] = [];
+    if (triggers.always) matched.push('always');
 
     // Match file patterns
     for (const pattern of triggers.files) {
@@ -131,7 +133,7 @@ export async function matchSkillTriggers(
 
     if (matched.length === 0) continue;
 
-    const confidence = scoreSuggestion(matched.length, allPatterns.length);
+    const confidence = triggers.always ? 'low' : scoreSuggestion(matched.length, allPatterns.length);
     const allLinks = await getLinkRecords(skill.slug);
     // Filter to user-scope + current-project-scope links only
     const links = allLinks.filter((l) => {
@@ -152,7 +154,7 @@ export async function matchSkillTriggers(
         const meta = await readMeta(skill.slug);
         const targetTools: string[] = [];
         if (meta.deployAs.cc !== 'none') targetTools.push('cc');
-        if (meta.deployAs.codex !== 'none') targetTools.push('codex');
+        if (meta.deployAs.agents !== 'none') targetTools.push('agents');
         isDeployed = targetTools.length > 0 && targetTools.every(
           (tool) => userLinks.some((l) => l.tool === tool),
         );

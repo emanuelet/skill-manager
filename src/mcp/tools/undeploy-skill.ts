@@ -9,7 +9,7 @@ import { withToolHandler } from './helpers.js';
 
 export const undeploySkillSchema = z.object({
   slug: z.string().describe('Skill identifier'),
-  tool: z.enum(['cc', 'codex', 'all']).optional().describe('Target tool (default: all)'),
+  tool: z.enum(['cc', 'agents', 'codex', 'all']).optional().describe('Target tool (default: all)'),
   scope: z.enum(['user', 'project']).optional().describe('Undeploy scope (default: user)'),
   project_root: z.string().optional().describe('Required for project scope'),
   force: z.boolean().optional().describe('Skip dependent safety check (default: false)'),
@@ -30,7 +30,7 @@ export const undeploySkillHandler = withToolHandler(
 
     const isProject = scope === 'project';
     const projectRoot = project_root;
-    const tools: ToolName[] = tool === 'all' ? ['cc', 'codex'] : [tool];
+    const tools: ToolName[] = tool === 'all' ? ['cc', 'agents'] : [tool === 'codex' ? 'agents' : tool];
 
     // Check for dependents unless force
     if (!force) {

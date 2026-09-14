@@ -14,7 +14,7 @@ afterEach(async () => {
 });
 
 function mockChildProcess() {
-  vi.mock('child_process', async (importOriginal) => {
+  vi.doMock('child_process', async (importOriginal) => {
     const orig = await importOriginal<typeof import('child_process')>();
     return {
       ...orig,

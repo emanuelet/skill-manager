@@ -8,6 +8,7 @@ import { withToolHandler } from './helpers.js';
 
 export const getSkillSchema = z.object({
   slug: z.string().describe('Skill identifier'),
+  include_content: z.boolean().default(true).describe('Include full SKILL.md content; set false for metadata-only disclosure'),
 });
 
 export const getSkillHandler = withToolHandler(
@@ -16,14 +17,14 @@ export const getSkillHandler = withToolHandler(
     const skill = await loadSkill(args.slug);
     const links = await getLinkRecords(args.slug);
     const files = await getSkillFiles(args.slug);
-    const rawContent = await fs.readFile(skillFile(args.slug), 'utf-8');
+    const rawContent = args.include_content !== false ? await fs.readFile(skillFile(args.slug), 'utf-8') : undefined;
 
     return {
       slug: skill.slug,
       name: skill.name,
       description: skill.description,
       tags: skill.tags,
-      content: rawContent,
+      ...(rawContent ? { content: rawContent } : {}),
       meta: skill.meta,
       deployedTo: [...new Set(links.map((l) => l.tool))],
       files,

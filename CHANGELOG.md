@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- Renamed the shared Codex CLI/OpenCode deployment target from `codex` to `agents`; legacy `codex` configuration and state values are normalized automatically
+
+### Added
+
+- `triggers.always` for low-confidence skill suggestions in every project
+
+## [1.1.0] - 2026-09-14
+
+### Added
+
+- Two-minute file-backed analytics cache shared by `sm analytics` and MCP `sm_get_analytics`
+
+### Changed
+
+- Analytics merge ranked `skilled` telemetry with canonical skill metadata when `skilled` is installed
+- Documented `skilled index` as the manual telemetry re-index command
+
 ## [1.0.2] - 2026-03-04
 
 ### Fixed

@@ -48,7 +48,7 @@ export async function infoCommand(name: string): Promise<void> {
   // Deploy status
   console.log(chalk.bold('\n  Deployment'));
   console.log(`    CC deploy:    ${skill.meta.deployAs.cc}`);
-  console.log(`    Codex deploy: ${skill.meta.deployAs.codex}`);
+  console.log(`    Agents deploy: ${skill.meta.deployAs.agents}`);
 
   // Dependencies
   try {

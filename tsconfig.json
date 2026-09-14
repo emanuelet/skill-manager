@@ -14,16 +14,16 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
+    "types": ["node"],
     "jsx": "react-jsx",
     "jsxImportSource": "react",
-    "baseUrl": ".",
     "paths": {
-      "@core/*": ["src/core/*"],
-      "@fs/*": ["src/fs/*"],
-      "@deploy/*": ["src/deploy/*"],
-      "@commands/*": ["src/commands/*"],
-      "@tui/*": ["src/tui/*"],
-      "@utils/*": ["src/utils/*"]
+      "@core/*": ["./src/core/*"],
+      "@fs/*": ["./src/fs/*"],
+      "@deploy/*": ["./src/deploy/*"],
+      "@commands/*": ["./src/commands/*"],
+      "@tui/*": ["./src/tui/*"],
+      "@utils/*": ["./src/utils/*"]
     }
   },
   "include": ["src/**/*", "bin/**/*"],

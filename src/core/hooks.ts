@@ -82,7 +82,7 @@ export async function handleSessionStart(input: HookInput): Promise<HookResult> 
       const meta = await readMeta(suggestion.slug);
       const tools: ToolName[] = [];
       if (meta.deployAs.cc !== 'none') tools.push('cc');
-      if (meta.deployAs.codex !== 'none') tools.push('codex');
+      if (meta.deployAs.agents !== 'none') tools.push('agents');
 
       if (tools.length === 0) continue; // Nothing deployable — skip entirely
 

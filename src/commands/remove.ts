@@ -9,6 +9,7 @@ import { SmError, SkillNotFoundError, UsageError } from '../utils/errors.js';
 
 interface RemoveOptions {
   cc?: boolean;
+  agents?: boolean;
   codex?: boolean;
   purge?: boolean;
   force?: boolean;
@@ -99,6 +100,6 @@ export async function removeCommand(name: string, opts: RemoveOptions): Promise<
 function resolveTools(opts: RemoveOptions): ToolName[] {
   const tools: ToolName[] = [];
   if (opts.cc) tools.push('cc');
-  if (opts.codex) tools.push('codex');
-  return tools.length > 0 ? tools : ['cc', 'codex'];
+  if (opts.agents || opts.codex) tools.push('agents');
+  return tools.length > 0 ? tools : ['cc', 'agents'];
 }

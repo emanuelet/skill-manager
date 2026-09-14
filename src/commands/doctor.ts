@@ -6,7 +6,7 @@ import {
   CC_COMMANDS_DIR,
   CC_SKILLS_DIR,
   CODEX_PROMPTS_DIR,
-  CODEX_SKILLS_DIR,
+  AGENTS_SKILLS_DIR,
   CODEX_LEGACY_SKILLS_DIR,
   sourceRepoDir,
 } from '../fs/paths.js';
@@ -17,8 +17,10 @@ import { readMeta } from '../core/meta.js';
 import { findStaleSkills, findUnusedSkills, type SkillMetaEntry } from '../core/analytics.js';
 import { getDirectDeps } from '../core/deps.js';
 import { loadSourcesRegistry } from '../core/sources.js';
+import { refreshUsage } from '../core/usage.js';
 
 export async function doctorCommand(): Promise<void> {
+  await refreshUsage();
   console.log(chalk.bold('\n🩺 Skill Manager — Health Check\n'));
 
   let issues = 0;
@@ -46,7 +48,7 @@ export async function doctorCommand(): Promise<void> {
     { name: 'CC commands', path: CC_COMMANDS_DIR },
     { name: 'CC skills', path: CC_SKILLS_DIR },
     { name: 'Codex prompts', path: CODEX_PROMPTS_DIR },
-    { name: 'Codex skills (~/.agents)', path: CODEX_SKILLS_DIR },
+    { name: 'Agent skills (~/.agents; Codex CLI and OpenCode)', path: AGENTS_SKILLS_DIR },
     { name: 'Codex skills (~/.codex, deprecated)', path: CODEX_LEGACY_SKILLS_DIR },
   ];
 
