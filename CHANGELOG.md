@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-09-14
+
+### Added
+
+- Two-minute file-backed analytics cache shared by `sm analytics` and MCP `sm_get_analytics`
+
+### Changed
+
+- Analytics merge ranked `skilled` telemetry with canonical skill metadata when `skilled` is installed
+- Documented `skilled index` as the manual telemetry re-index command
+
 ## [1.0.2] - 2026-03-04
 
 ### Fixed

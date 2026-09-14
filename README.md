@@ -527,6 +527,8 @@ sm analytics --json
 
 Usage is tracked automatically by session hooks. `sm doctor` also reports unused skills (not used in 30+ days) as an informational check. `sm info <name>` shows per-skill usage stats.
 
+When [`skilled`](https://www.npmjs.com/package/@avcodes/skilled) is installed, analytics imports its ranked telemetry with `skilled list --sort count --no-index --json`. The combined analytics snapshot is cached at `~/.skill-manager/analytics-cache.json` for two minutes and shared by the CLI and MCP `sm_get_analytics` tool. Rebuild the telemetry index manually with `skilled index`; the next analytics request uses the rebuilt data after the cache expires.
+
 ## Remote Sources
 
 Add git repositories as skill sources to discover and install skills shared by others:

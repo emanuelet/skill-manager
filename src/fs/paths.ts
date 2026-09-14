@@ -15,6 +15,7 @@ export const SM_CONFIG_FILE = path.join(SM_HOME, 'config.toml');
 export const SM_STATE_FILE = path.join(SM_HOME, 'state.json');
 export const SM_SOURCES_REGISTRY = path.join(SM_HOME, 'sources.json');
 export const SM_SEARCH_DB = path.join(SM_HOME, 'search.sqlite');
+export const SM_ANALYTICS_CACHE = path.join(SM_HOME, 'analytics-cache.json');
 export const SM_BIFROST_STATE_FILE = path.join(SM_HOME, 'bifrost.json');
 export const SM_CONFLICTS_DIR = path.join(SM_HOME, 'conflicts');
 
@@ -136,9 +137,7 @@ export function resolveProjectRoot(projectRoot: string): string {
 
 // Project-level deploy target directory
 export function projectDeployTargetDir(tool: ToolName, projectRoot: string): string {
-  return tool === 'cc'
-    ? projectCCSkillsDir(projectRoot)
-    : projectCodexSkillsDir(projectRoot);
+  return tool === 'cc' ? projectCCSkillsDir(projectRoot) : projectCodexSkillsDir(projectRoot);
 }
 
 // Project-level deploy link path

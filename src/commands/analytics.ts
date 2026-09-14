@@ -1,29 +1,13 @@
 import chalk from 'chalk';
-import { listSlugs } from '../core/skill.js';
-import { readMeta } from '../core/meta.js';
-import { getUsageStats, findUnusedSkills, type SkillMetaEntry } from '../core/analytics.js';
+import { getAnalyticsSnapshot } from '../core/analytics-snapshot.js';
 import { formatTable, type Column } from '../utils/table.js';
-import { refreshUsage } from '../core/usage.js';
 
 interface AnalyticsOptions {
   json?: boolean;
 }
 
 export async function analyticsCommand(opts: AnalyticsOptions): Promise<void> {
-  await refreshUsage();
-  const slugs = await listSlugs();
-  const metas: SkillMetaEntry[] = [];
-
-  for (const slug of slugs) {
-    try {
-      const meta = await readMeta(slug);
-      metas.push({ slug, meta });
-    } catch {
-      // Skip skills with unreadable meta
-    }
-  }
-
-  const stats = getUsageStats(metas);
+  const { stats, unused } = await getAnalyticsSnapshot();
 
   if (opts.json) {
     process.stdout.write(JSON.stringify(stats, null, 2) + '\n');
@@ -45,13 +29,13 @@ export async function analyticsCommand(opts: AnalyticsOptions): Promise<void> {
       header: 'Last Used',
       key: 'lastUsed',
       width: 12,
-      format: (v) => v ? formatDate(v as string) : chalk.dim('never'),
+      format: (v) => (v ? formatDate(v as string) : chalk.dim('never')),
     },
     {
       header: 'Last Deployed',
       key: 'lastDeployed',
       width: 14,
-      format: (v) => v ? formatDate(v as string) : chalk.dim('never'),
+      format: (v) => (v ? formatDate(v as string) : chalk.dim('never')),
     },
   ];
 
@@ -59,7 +43,6 @@ export async function analyticsCommand(opts: AnalyticsOptions): Promise<void> {
   console.log(formatTable(rows, columns));
 
   // Show unused skills section
-  const unused = findUnusedSkills(metas, 30);
   if (unused.length > 0) {
     console.log(chalk.bold('\n  Unused skills (not used in 30+ days)'));
     for (const slug of unused) {

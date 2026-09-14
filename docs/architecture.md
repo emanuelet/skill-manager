@@ -17,6 +17,7 @@ src/
 │   ├── hash.ts          → SHA-256 content hashing
 │   ├── dedup.ts         → Duplicate skill detection
 │   ├── analytics.ts     → Usage stats, stale/unused skill detection
+│   ├── analytics-snapshot.ts → Cached canonical and skilled telemetry snapshot
 │   ├── versioning.ts    → Content-hash version snapshots (.sm-history.json)
 │   ├── deps.ts          → Dependency graph with cycle detection
 │   ├── triggers.ts      → File/directory-based skill activation triggers
