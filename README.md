@@ -160,8 +160,8 @@ Without flags, `add` and `remove` target both tools. `add` auto-deploys dependen
 | Command                                                                   | Description                                              |
 | ------------------------------------------------------------------------- | -------------------------------------------------------- |
 | `sm mcp`                                                                  | Start the MCP server (stdio transport, used by AI tools) |
-| `sm mcp setup [--tool cc\|codex\|all] [--scope user\|project\|local]`     | Register the MCP server in Claude Code and/or Codex CLI  |
-| `sm mcp uninstall [--tool cc\|codex\|all] [--scope user\|project\|local]` | Remove the MCP server from Claude Code and/or Codex CLI  |
+| `sm mcp setup [--tool cc\|agents\|all] [--scope user\|project\|local]`     | Register the MCP server in Claude Code and/or the agent-compatible target |
+| `sm mcp uninstall [--tool cc\|agents\|all] [--scope user\|project\|local]` | Remove the MCP server from Claude Code and/or the agent-compatible target |
 
 ### Install
 
@@ -221,10 +221,10 @@ The TUI runs in fullscreen mode (alternate screen buffer). Prior terminal output
 | `j`/`k` or arrows | Navigate lists                                                                                                 |
 | `Enter`           | Select / open detail                                                                                           |
 | `/`               | Search (Dashboard and Browser)                                                                                 |
-| `f`               | Cycle filter (in Browser): all, cc, codex, project, undeployed, remote                                         |
+| `f`               | Cycle filter (in Browser): all, cc, agents, project, undeployed, remote                                        |
 | `Tab`             | Switch active scope in Detail (`User` ↔ `Project`)                                                             |
 | `u` / `p`         | Set active scope to `User` / `Project` in Detail                                                               |
-| `c` / `x`         | Toggle CC / Codex deployment in the active scope (Detail)                                                      |
+| `c` / `x`         | Toggle CC / Agents deployment in the active scope (Detail)                                                     |
 | `a`               | Browse skills (Dashboard) / deploy both tools (Detail) / deploy selected (Browser bulk) / add source (Sources) |
 | `r`               | Open Sources screen (Dashboard) / remove both tools (Detail) / undeploy selected (Browser bulk)                |
 | `s`               | Sync (Dashboard → Sync screen, Sources → sync selected source)                                                 |
@@ -245,17 +245,17 @@ When one or more skills are selected:
 
 | Key   | Action                                                     |
 | ----- | ---------------------------------------------------------- |
-| `a`   | Deploy all selected to CC + Codex (user scope)             |
-| `r`   | Undeploy all selected from CC + Codex                      |
+| `a`   | Deploy all selected to CC + Agents (user scope)            |
+| `r`   | Undeploy all selected from CC + Agents                     |
 | `D`   | Delete all selected permanently (with confirmation dialog) |
 | `Esc` | Clear selection                                            |
 
-After each bulk action, a status message reports results (e.g., `Deployed 3 skills to CC + Codex` or `Undeployed 2 skills from CC + Codex; 1 already undeployed`). Selection is cleared and the skill list refreshes automatically.
+After each bulk action, a status message reports results (e.g., `Deployed 3 skills to CC + Agents` or `Undeployed 2 skills from CC + Agents; 1 already undeployed`). Selection is cleared and the skill list refreshes automatically.
 
 Detail view and list rows always show both scopes explicitly:
 
-- `User: CC on/off, Codex on/off`
-- `Project: CC on/off, Codex on/off` (current working directory)
+- `User: CC on/off, Agents on/off`
+- `Project: CC on/off, Agents on/off` (current working directory)
 
 ## How It Works
 
@@ -280,7 +280,7 @@ The `deployAs` field in `.sm-meta.json` controls how each skill is exposed to ea
 | `legacy-command` | `~/.claude/commands/<slug>.md` | `SKILL.md` (file link)     |
 | `legacy-prompt`  | `~/.codex/prompts/<slug>.md`   | `SKILL.md` (file link)     |
 | `skill` (CC)     | `~/.claude/skills/<slug>/`     | skill directory (dir link) |
-| `skill` (Codex)  | `~/.agents/skills/<slug>/`     | skill directory (dir link) |
+| `skill` (Agents) | `~/.agents/skills/<slug>/`     | shared by Codex CLI and OpenCode |
 | `none`           | —                              | not deployed to that tool  |
 
 All symlink operations are atomic (create temp link, then rename).
@@ -637,7 +637,7 @@ Pack definitions live in `packs/*.json` and reference skills by slug and source 
 
 ## MCP Server
 
-Skill Manager includes a built-in [Model Context Protocol](https://modelcontextprotocol.io/) server that lets Claude Code and Codex CLI interact with your skills programmatically. Instead of switching to a terminal to run `sm` commands, the AI assistant can search for skills, deploy them, and read their content — all within the conversation.
+Skill Manager includes a built-in [Model Context Protocol](https://modelcontextprotocol.io/) server for Claude Code, Codex CLI, and OpenCode. Instead of switching to a terminal to run `sm` commands, the AI assistant can search for skills, deploy them, and read their content within the conversation.
 
 ### Setup
 
@@ -718,7 +718,7 @@ With the MCP server registered, you can ask your AI assistant things like:
 Optional config at `~/.skill-manager/config.toml`:
 
 ```toml
-defaultTools = ["cc", "codex"]
+defaultTools = ["cc", "agents"]
 autoSync = true
 autoAdopt = true           # auto-detect and import unmanaged skills (default: true)
 logLevel = "info"          # debug | info | warn | error
@@ -769,7 +769,7 @@ Skill Manager+ supports Linux only.
 
 **Skills not appearing after deploy**
 
-Run `sm doctor` to check for broken symlinks and verify deployment state. Ensure the target tool (Claude Code or Codex CLI) is reading from the correct directory — Claude Code uses `~/.claude/skills/`, Codex uses `~/.agents/skills/`. Legacy formats deploy to `~/.claude/commands/` and `~/.codex/prompts/` respectively.
+Run `sm doctor` to check for broken symlinks and verify deployment state. Claude Code uses `~/.claude/skills/`; Codex CLI and OpenCode share `~/.agents/skills/`. Legacy formats deploy to `~/.claude/commands/` and `~/.codex/prompts/` respectively.
 
 **`sm pack install` fails to clone a repository**
 

@@ -7,7 +7,7 @@ Location: `~/.skill-manager/config.toml`
 Created automatically with defaults on first run. Edit manually or let `sm` manage it.
 
 ```toml
-defaultTools = ["cc", "codex"]
+defaultTools = ["cc", "agents"]
 autoSync = true
 autoAdopt = true
 logLevel = "info"
@@ -19,7 +19,7 @@ logLevel = "info"
 | Option         | Type     | Default           | Description                                                                                                                            |
 | -------------- | -------- | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | `editor`       | string   | (unset)           | Editor command for `sm edit`. Overrides `$EDITOR` and `$VISUAL` env vars. Example: `"code --wait"`, `"nvim"`                           |
-| `defaultTools` | string[] | `["cc", "codex"]` | Target tools for deploy operations. Valid values: `"cc"` (Claude Code), `"codex"` (Codex CLI)                                          |
+| `defaultTools` | string[] | `["cc", "agents"]` | Target tools for deploy operations. Valid values: `"cc"` (Claude Code), `"agents"` (shared Codex CLI and OpenCode skills directory). Legacy `"codex"` is accepted and normalized to `"agents"`. |
 | `autoSync`     | boolean  | `true`            | Automatically sync remote sources on CLI startup                                                                                       |
 | `autoAdopt`    | boolean  | `true`            | Auto-detect and import unmanaged skills from tool directories (e.g., skills placed directly in `~/.claude/skills/` without using `sm`) |
 | `logLevel`     | string   | `"info"`          | Log verbosity. One of: `"debug"`, `"info"`, `"warn"`, `"error"`                                                                        |
@@ -59,7 +59,7 @@ All paths are defined in `src/fs/paths.ts` and respect `SM_HOME` overrides.
 | --------------------- | ----------- | -------------------------------- |
 | `~/.claude/skills/`   | Claude Code | `skill` (directory symlinks)     |
 | `~/.claude/commands/` | Claude Code | `legacy-command` (file symlinks) |
-| `~/.agents/skills/`   | Codex CLI   | `skill` (directory symlinks)     |
+| `~/.agents/skills/`   | Codex CLI and OpenCode | `skill` (directory symlinks)     |
 | `~/.codex/prompts/`   | Codex CLI   | `legacy-prompt` (file symlinks)  |
 | `~/.codex/skills/`    | Codex CLI   | Legacy scan-only (deprecated)    |
 
@@ -68,7 +68,7 @@ All paths are defined in `src/fs/paths.ts` and respect `SM_HOME` overrides.
 | Path              | Description                       |
 | ----------------- | --------------------------------- |
 | `.claude/skills/` | Project-scoped Claude Code skills |
-| `.agents/skills/` | Project-scoped Codex CLI skills   |
+| `.agents/skills/` | Project-scoped Codex CLI and OpenCode skills |
 | `.skills.json`    | Project skill manifest            |
 
 ## State File
@@ -102,7 +102,7 @@ Tracks all deployed symlinks and operational timestamps.
 | Field         | Type                                                 | Description                                         |
 | ------------- | ---------------------------------------------------- | --------------------------------------------------- |
 | `slug`        | string                                               | Skill identifier                                    |
-| `tool`        | `"cc"` \| `"codex"`                                  | Target tool                                         |
+| `tool`        | `"cc"` \| `"agents"`                                 | Target tool (`agents` covers Codex CLI and OpenCode) |
 | `format`      | `"skill"` \| `"legacy-command"` \| `"legacy-prompt"` | Deploy format                                       |
 | `linkPath`    | string                                               | Absolute path of the symlink                        |
 | `targetPath`  | string                                               | Absolute path of the symlink target                 |
@@ -132,7 +132,7 @@ Location: `~/.skill-manager/skills/<slug>/.sm-meta.json`
   "tags": ["utility", "testing"],
   "deployAs": {
     "cc": "skill",
-    "codex": "skill"
+    "agents": "skill"
   },
   "createdAt": "2025-01-15T10:00:00.000Z",
   "updatedAt": "2025-01-15T10:30:00.000Z",
@@ -154,7 +154,7 @@ Location: `~/.skill-manager/skills/<slug>/.sm-meta.json`
 | `source.repo`         | string                                                | Source repository URL (for git sources)       |
 | `tags`                | string[]                                              | Metadata tags for organization                |
 | `deployAs.cc`         | `"skill"` \| `"legacy-command"` \| `"none"`           | Deploy format for Claude Code                 |
-| `deployAs.codex`      | `"skill"` \| `"legacy-prompt"` \| `"none"`            | Deploy format for Codex CLI                   |
+| `deployAs.agents`     | `"skill"` \| `"legacy-prompt"` \| `"none"`            | Deploy format for the shared Codex CLI/OpenCode target |
 | `createdAt`           | string                                                | ISO 8601 creation timestamp                   |
 | `updatedAt`           | string                                                | ISO 8601 last modification timestamp          |
 | `lastDeployed`        | string                                                | ISO 8601 timestamp of last deploy             |
@@ -171,7 +171,7 @@ name: 'My Skill'
 description: 'What this skill does'
 version: '1.0.0'
 tags: [utility, testing]
-tools: [cc, codex]
+tools: [cc, agents]
 depends: [other-skill, lib-skill]
 triggers:
   files: ['Cargo.toml', '*.rs']

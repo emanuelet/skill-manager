@@ -1,6 +1,6 @@
 # Architecture Overview
 
-`sm` is a unified skill manager for Claude Code and Codex CLI. It maintains a canonical store of skills and deploys them to tool directories via symlinks.
+`sm` is a unified skill manager for Claude Code plus the shared Codex CLI/OpenCode skills directory. It maintains a canonical store of skills and deploys them to tool directories via symlinks.
 
 ## Directory Structure
 
@@ -122,7 +122,7 @@ All symlink operations use an atomic temp-then-rename pattern (`src/fs/links.ts`
 | Tool        | Skill Format               | Legacy Format                  |
 | ----------- | -------------------------- | ------------------------------ |
 | Claude Code | `~/.claude/skills/<slug>/` | `~/.claude/commands/<slug>.md` |
-| Codex CLI   | `~/.agents/skills/<slug>/` | `~/.codex/prompts/<slug>.md`   |
+| Codex CLI and OpenCode | `~/.agents/skills/<slug>/` | `~/.codex/prompts/<slug>.md` (Codex legacy only) |
 
 ### Dependencies
 
