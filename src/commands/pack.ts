@@ -206,7 +206,7 @@ export async function packInstallCommand(name: string, opts: { dryRun?: boolean 
         content,
         source: { type: 'git', repo: skill.sourceUrl, originalPath: skill.filePath },
       });
-      await deploySingleSkill(skill.slug, ['cc', 'codex']);
+      await deploySingleSkill(skill.slug, ['cc', 'agents']);
       installed++;
       console.log(chalk.green(`  ✓ ${skill.slug}`));
     } catch (err) {

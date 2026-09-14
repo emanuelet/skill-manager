@@ -28,13 +28,13 @@ describe('adopt — deployAs mapping', () => {
     // Mirrors buildDeployAs(tool, format)
     const buildDeployAs = (tool: string, format: string) => ({
       cc: tool === 'cc' ? format : 'none',
-      codex: tool === 'codex' ? format : 'none',
+      agents: tool === 'agents' ? format : 'none',
     });
 
-    expect(buildDeployAs('cc', 'legacy-command')).toEqual({ cc: 'legacy-command', codex: 'none' });
-    expect(buildDeployAs('cc', 'skill')).toEqual({ cc: 'skill', codex: 'none' });
-    expect(buildDeployAs('codex', 'legacy-prompt')).toEqual({ cc: 'none', codex: 'legacy-prompt' });
-    expect(buildDeployAs('codex', 'skill')).toEqual({ cc: 'none', codex: 'skill' });
+    expect(buildDeployAs('cc', 'legacy-command')).toEqual({ cc: 'legacy-command', agents: 'none' });
+    expect(buildDeployAs('cc', 'skill')).toEqual({ cc: 'skill', agents: 'none' });
+    expect(buildDeployAs('agents', 'legacy-prompt')).toEqual({ cc: 'none', agents: 'legacy-prompt' });
+    expect(buildDeployAs('agents', 'skill')).toEqual({ cc: 'none', agents: 'skill' });
   });
 });
 

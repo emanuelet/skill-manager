@@ -32,8 +32,8 @@ export function useSync() {
       for (const link of state.links) {
         if ((link.scope ?? 'user') === 'user') {
           // Deprecated format: legacy-prompt should migrate to skill
-          if (link.format === 'legacy-prompt' && link.tool === 'codex') {
-            const canonicalPath = deployLinkPath('codex', 'skill', link.slug)!;
+          if (link.format === 'legacy-prompt' && link.tool === 'agents') {
+            const canonicalPath = deployLinkPath('agents', 'skill', link.slug)!;
             deprecatedLinks.push({ link, canonicalPath, reason: 'format' });
             continue;
           }
@@ -80,9 +80,9 @@ export function useSync() {
           // Undeploy old format, update meta, deploy as skill
           await undeploy(d.link.slug, d.link.tool as ToolName, d.link.format as DeployFormat);
           const meta = await readMeta(d.link.slug);
-          meta.deployAs.codex = 'skill';
+          meta.deployAs.agents = 'skill';
           await writeMeta(d.link.slug, meta);
-          await deploy(d.link.slug, 'codex', 'skill');
+          await deploy(d.link.slug, 'agents', 'skill');
         } else {
           // Same format, different path — redeploy picks up new canonical path
           await deploy(d.link.slug, d.link.tool as ToolName, d.link.format as DeployFormat);

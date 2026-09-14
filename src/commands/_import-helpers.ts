@@ -72,7 +72,7 @@ export async function importSingleSkill(opts: ImportSkillOpts): Promise<void> {
   const meta = createMeta({
     source: opts.source,
     tags: opts.tags ?? parsed?.frontmatter.tags ?? [],
-    deployAs: opts.deployAs ?? { cc: 'skill', codex: 'skill' },
+    deployAs: opts.deployAs ?? { cc: 'skill', agents: 'skill' },
   });
   await writeMeta(opts.slug, meta);
 

@@ -3,7 +3,7 @@ import {
   CC_COMMANDS_DIR,
   CC_SKILLS_DIR,
   CODEX_PROMPTS_DIR,
-  CODEX_SKILLS_DIR,
+  AGENTS_SKILLS_DIR,
   CODEX_LEGACY_SKILLS_DIR,
   SM_SKILLS_DIR,
 } from '../fs/paths.js';
@@ -17,7 +17,7 @@ export async function backupCommand(): Promise<void> {
     { label: 'cc-commands', path: CC_COMMANDS_DIR },
     { label: 'cc-skills', path: CC_SKILLS_DIR },
     { label: 'codex-prompts', path: CODEX_PROMPTS_DIR },
-    { label: 'codex-skills', path: CODEX_SKILLS_DIR },
+    { label: 'agents-skills', path: AGENTS_SKILLS_DIR },
     { label: 'codex-legacy-skills', path: CODEX_LEGACY_SKILLS_DIR },
   ]);
 
@@ -33,7 +33,7 @@ export async function restoreCommand(id: string): Promise<void> {
     'cc-commands': CC_COMMANDS_DIR,
     'cc-skills': CC_SKILLS_DIR,
     'codex-prompts': CODEX_PROMPTS_DIR,
-    'codex-skills': CODEX_SKILLS_DIR,
+    'agents-skills': AGENTS_SKILLS_DIR,
   });
 
   if (result.errors.length > 0) {

@@ -3,7 +3,7 @@ import path from 'path';
 import {
   CC_COMMANDS_DIR,
   CODEX_PROMPTS_DIR,
-  CODEX_SKILLS_DIR,
+  AGENTS_SKILLS_DIR,
   CODEX_LEGACY_SKILLS_DIR,
 } from './paths.js';
 import { buildScannedFile, type ScannedFile } from '../core/dedup.js';
@@ -101,7 +101,7 @@ function sourceDir(source: ScanSource): string {
     case 'codex-prompts':
       return CODEX_PROMPTS_DIR;
     case 'codex-skills':
-      return CODEX_SKILLS_DIR;
+      return AGENTS_SKILLS_DIR;
     case 'agents-skills':
       return CODEX_LEGACY_SKILLS_DIR;
   }

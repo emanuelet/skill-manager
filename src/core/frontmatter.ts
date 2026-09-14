@@ -10,7 +10,7 @@ export const FrontmatterSchema = z.object({
   intents: z.array(z.string()).default([]),
   examples: z.array(z.string()).default([]),
   domains: z.array(z.string()).default([]),
-  tools: z.array(z.enum(['cc', 'codex'])).optional(),
+  tools: z.array(z.enum(['cc', 'agents', 'codex'])).optional(),
 }).passthrough();
 
 export type Frontmatter = z.infer<typeof FrontmatterSchema>;

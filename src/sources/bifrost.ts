@@ -131,7 +131,7 @@ async function writeRemote(baseUrl: string, slug: string, remote: RemoteDetail, 
   if (await fs.pathExists(previous)) await fs.remove(previous);
   const meta = await readMeta(slug).catch(() => null);
   await writeMeta(slug, meta ? { ...meta, source: { type: 'bifrost', repo: remote.id, sourceId: remote.id }, updatedAt } : {
-    format: 'skill', source: { type: 'bifrost', repo: remote.id, sourceId: remote.id }, tags: [], deployAs: { cc: 'skill', codex: 'skill' }, createdAt: updatedAt, updatedAt, usageCount: 0,
+    format: 'skill', source: { type: 'bifrost', repo: remote.id, sourceId: remote.id }, tags: [], deployAs: { cc: 'skill', agents: 'skill' }, createdAt: updatedAt, updatedAt, usageCount: 0,
   });
   const stamp = new Date(updatedAt); await fs.utimes(path.join(target, 'SKILL.md'), stamp, stamp);
 }
@@ -155,7 +155,7 @@ async function deployMissingBifrostTargets(slug: string): Promise<number> {
   if (!(await fs.pathExists(skillMetaFile(slug)))) return 0;
   const [meta, links] = await Promise.all([readMeta(slug), getLinkRecords(slug)]);
   let deployed = 0;
-  for (const tool of ['cc', 'codex'] as const) {
+  for (const tool of ['cc', 'agents'] as const) {
     const format = meta.deployAs[tool];
     if (format === 'none' || links.some((link) => link.tool === tool && (link.scope ?? 'user') === 'user')) continue;
     if ((await deploy(slug, tool)).action === 'deployed') deployed++;

@@ -10,14 +10,14 @@ export async function convertCommand(name: string): Promise<void> {
 
   const meta = await readMeta(name);
 
-  if (meta.format === 'skill' && meta.deployAs.cc === 'skill' && meta.deployAs.codex === 'skill') {
+  if (meta.format === 'skill' && meta.deployAs.cc === 'skill' && meta.deployAs.agents === 'skill') {
     console.log(chalk.yellow(`${name} is already in skill format.`));
     return;
   }
 
   // Update deploy format to skill
   meta.deployAs.cc = meta.deployAs.cc !== 'none' ? 'skill' : 'none';
-  meta.deployAs.codex = meta.deployAs.codex !== 'none' ? 'skill' : 'none';
+  meta.deployAs.agents = meta.deployAs.agents !== 'none' ? 'skill' : 'none';
   meta.format = 'skill';
   meta.updatedAt = new Date().toISOString();
 

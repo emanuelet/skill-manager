@@ -128,7 +128,7 @@ describe('handleSessionStart', () => {
     });
     await addLinkRecord({
       slug: 'node-helper',
-      tool: 'codex',
+      tool: 'agents',
       format: 'skill',
       linkPath: codexLink,
       targetPath: target,
@@ -295,8 +295,8 @@ describe('handleSessionStart', () => {
       expect(ccLinks).toHaveLength(0);
 
       // parent SHOULD be deployed to codex (dep satisfied codex)
-      const codexLinks = parentLinks.filter((l) => l.tool === 'codex');
-      expect(codexLinks).toHaveLength(1);
+      const agentsLinks = parentLinks.filter((l) => l.tool === 'agents');
+      expect(agentsLinks).toHaveLength(1);
     } finally {
       await fs.remove(projectDir);
     }

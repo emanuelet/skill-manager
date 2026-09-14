@@ -58,9 +58,9 @@ export function SkillList({
         <Box>
           <Text>{' '.repeat(prefixWidth + nameWidth + COL_GAP)}</Text>
           <Text color={colors.cc}>{'CC'.padEnd(1 + DOT_GAP)}</Text>
-          <Text color={colors.codex}>{'Codex'.padEnd(1 + SCOPE_GAP)}</Text>
+          <Text color={colors.codex}>{'Agents'.padEnd(1 + SCOPE_GAP)}</Text>
           <Text color={colors.cc}>{'CC'.padEnd(1 + DOT_GAP)}</Text>
-          <Text color={colors.codex}>{'Codex'}</Text>
+          <Text color={colors.codex}>{'Agents'}</Text>
         </Box>
       </Box>
 
@@ -70,13 +70,13 @@ export function SkillList({
         const skillLinks = links.filter((l) => l.slug === skill.slug);
 
         const userCC = skillLinks.some((l) => l.tool === 'cc' && (l.scope ?? 'user') === 'user');
-        const userCodex = skillLinks.some((l) => l.tool === 'codex' && (l.scope ?? 'user') === 'user');
+        const userAgents = skillLinks.some((l) => l.tool === 'agents' && (l.scope ?? 'user') === 'user');
         const projectCC =
           projectRoot != null &&
           skillLinks.some((l) => l.tool === 'cc' && l.scope === 'project' && l.projectRoot === projectRoot);
-        const projectCodex =
+        const projectAgents =
           projectRoot != null &&
-          skillLinks.some((l) => l.tool === 'codex' && l.scope === 'project' && l.projectRoot === projectRoot);
+          skillLinks.some((l) => l.tool === 'agents' && l.scope === 'project' && l.projectRoot === projectRoot);
 
         const checked = multiSelect && selectedSlugs.has(skill.slug);
 
@@ -95,11 +95,11 @@ export function SkillList({
               <Text>{' '.repeat(COL_GAP)}</Text>
               <Text color={userCC ? colors.cc : colors.muted}>{userCC ? '\u25CF' : '\u25CB'}</Text>
               <Text>{' '.repeat(DOT_GAP)}</Text>
-              <Text color={userCodex ? colors.codex : colors.muted}>{userCodex ? '\u25CF' : '\u25CB'}</Text>
+              <Text color={userAgents ? colors.codex : colors.muted}>{userAgents ? '\u25CF' : '\u25CB'}</Text>
               <Text>{' '.repeat(SCOPE_GAP)}</Text>
               <Text color={projectCC ? colors.cc : colors.muted}>{projectCC ? '\u25CF' : '\u25CB'}</Text>
               <Text>{' '.repeat(DOT_GAP)}</Text>
-              <Text color={projectCodex ? colors.codex : colors.muted}>{projectCodex ? '\u25CF' : '\u25CB'}</Text>
+              <Text color={projectAgents ? colors.codex : colors.muted}>{projectAgents ? '\u25CF' : '\u25CB'}</Text>
             </Box>
             {showDescription && (
               <Box>

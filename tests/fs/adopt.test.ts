@@ -71,7 +71,7 @@ describe('detectUnmanaged', () => {
     const entries = await detectUnmanaged();
     expect(entries).toHaveLength(1);
     expect(entries[0].slug).toBe('codex-skill');
-    expect(entries[0].tool).toBe('codex');
+    expect(entries[0].tool).toBe('agents');
     expect(entries[0].format).toBe('legacy-prompt');
   });
 
@@ -198,7 +198,7 @@ describe('autoAdopt', () => {
     const meta = await fs.readJson(path.join(SM_SKILLS_DIR, 'adopt-me', '.sm-meta.json'));
     expect(meta.source.type).toBe('adopted');
     expect(meta.deployAs.cc).toBe('legacy-command');
-    expect(meta.deployAs.codex).toBe('none');
+    expect(meta.deployAs.agents).toBe('none');
   });
 
   it('adopts a skill directory from CC skills dir', async () => {
@@ -352,7 +352,7 @@ describe('autoAdopt', () => {
 
     const meta = await fs.readJson(path.join(SM_SKILLS_DIR, 'codex-adopted', '.sm-meta.json'));
     expect(meta.source.type).toBe('adopted');
-    expect(meta.deployAs.codex).toBe('legacy-prompt');
+    expect(meta.deployAs.agents).toBe('legacy-prompt');
     expect(meta.deployAs.cc).toBe('none');
   });
 

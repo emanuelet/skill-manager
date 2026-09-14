@@ -10,7 +10,7 @@ import { withToolHandler } from './helpers.js';
 
 export const deploySkillSchema = z.object({
   slug: z.string().describe('Skill identifier'),
-  tool: z.enum(['cc', 'codex', 'all']).optional().describe('Target tool (default: all)'),
+  tool: z.enum(['cc', 'agents', 'codex', 'all']).optional().describe('Target tool (default: all)'),
   scope: z.enum(['user', 'project']).optional().describe('Deploy scope (default: user)'),
   project_root: z.string().optional().describe('Required when scope is project'),
   resolve_deps: z.boolean().optional().describe('Auto-deploy dependencies (default: true)'),
@@ -31,14 +31,14 @@ export const deploySkillHandler = withToolHandler(
 
     const isProject = scope === 'project';
     const projectRoot = project_root;
-    const requestedTools: ToolName[] = tool === 'all' ? ['cc', 'codex'] : [tool];
+    const requestedTools: ToolName[] = tool === 'all' ? ['cc', 'agents'] : [tool === 'codex' ? 'agents' : tool];
 
     // Filter to tools with a deploy format (user scope only)
     const meta = await readMeta(slug);
     const tools = isProject
       ? requestedTools
       : requestedTools.filter((t) => {
-          const format = t === 'cc' ? meta.deployAs.cc : meta.deployAs.codex;
+          const format = t === 'cc' ? meta.deployAs.cc : meta.deployAs.agents;
           return format !== 'none';
         });
 

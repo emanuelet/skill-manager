@@ -8,7 +8,7 @@ const program = new Command();
 
 program
   .name('sm')
-  .description('Skill Manager — Unified skill management for Claude Code & Codex CLI')
+  .description('Skill Manager — Unified skill management for Claude Code and agent-compatible tools')
   .version(VERSION)
   .enablePositionalOptions();
 
@@ -41,7 +41,8 @@ program
   .alias('ls')
   .description('List all managed skills')
   .option('--cc', 'Show only CC-deployed skills')
-  .option('--codex', 'Show only Codex-deployed skills')
+  .option('--agents', 'Show only agent-compatible deployments (Codex CLI and OpenCode)')
+  .option('--codex', 'Deprecated alias for --agents')
   .option('--status', 'Show detailed status information')
   .option('--project', 'Show only project-scoped deployments for current directory')
   .action(
@@ -55,7 +56,8 @@ program
   .command('add <name>')
   .description('Deploy a skill to tool(s)')
   .option('--cc', 'Deploy to Claude Code')
-  .option('--codex', 'Deploy to Codex CLI')
+  .option('--agents', 'Deploy to the shared Codex CLI and OpenCode skills directory')
+  .option('--codex', 'Deprecated alias for --agents')
   .option('--all', 'Deploy to all tools')
   .option('--no-deps', 'Skip dependency auto-deploy')
   .option('--project', 'Deploy to current project directory')
@@ -72,7 +74,8 @@ program
   .alias('rm')
   .description('Undeploy a skill from tool(s)')
   .option('--cc', 'Remove from Claude Code')
-  .option('--codex', 'Remove from Codex CLI')
+  .option('--agents', 'Remove from the shared Codex CLI and OpenCode skills directory')
+  .option('--codex', 'Deprecated alias for --agents')
   .option('--purge', 'Also delete from canonical store')
   .option('--force', 'Skip dependent safety check')
   .option('--project', 'Remove from current project directory')

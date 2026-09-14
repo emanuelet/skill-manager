@@ -5,7 +5,7 @@ import {
   SM_SKILLS_DIR,
   CC_COMMANDS_DIR,
   CODEX_PROMPTS_DIR,
-  CODEX_SKILLS_DIR,
+  AGENTS_SKILLS_DIR,
   CODEX_LEGACY_SKILLS_DIR,
   skillDir,
   skillFile,
@@ -97,7 +97,7 @@ export async function importCommand(opts: ImportOptions): Promise<void> {
   const backupInfo = await createBackup([
     { label: 'cc-commands', path: CC_COMMANDS_DIR },
     { label: 'codex-prompts', path: CODEX_PROMPTS_DIR },
-    { label: 'codex-skills', path: CODEX_SKILLS_DIR },
+    { label: 'agents-skills', path: AGENTS_SKILLS_DIR },
     { label: 'agents-skills', path: CODEX_LEGACY_SKILLS_DIR },
   ]);
   console.log(`  Backup created: ${backupInfo.id} (${backupInfo.fileCount} files)`);
@@ -167,11 +167,11 @@ async function importGroup(group: DedupGroup): Promise<void> {
   const codexPromptSource = group.files.find((f) => f.source === 'codex-prompts');
   const codexSkillSource = group.files.find((f) => f.source === 'codex-skills' || f.source === 'agents-skills');
 
-  const deployAs: { cc: string; codex: string } = { cc: 'none', codex: 'none' };
+  const deployAs: { cc: string; agents: string } = { cc: 'none', agents: 'none' };
 
   if (ccSource) deployAs.cc = 'legacy-command';
-  if (codexSkillSource) deployAs.codex = 'skill';
-  else if (codexPromptSource) deployAs.codex = 'legacy-prompt';
+  if (codexSkillSource) deployAs.agents = 'skill';
+  else if (codexPromptSource) deployAs.agents = 'legacy-prompt';
 
   // Determine original format
   const originalFormat = ccSource ? 'legacy-command' : codexPromptSource ? 'legacy-prompt' : 'skill';
@@ -184,7 +184,7 @@ async function importGroup(group: DedupGroup): Promise<void> {
       originalPath: group.canonical.path,
     },
     tags: parsed?.frontmatter.tags ?? [],
-    deployAs: deployAs as { cc: 'legacy-command' | 'skill' | 'none'; codex: 'legacy-prompt' | 'skill' | 'none' },
+    deployAs: deployAs as { cc: 'legacy-command' | 'skill' | 'none'; agents: 'legacy-prompt' | 'skill' | 'none' },
     originalFormat,
   });
   await writeMeta(group.slug, meta);
@@ -224,10 +224,10 @@ async function deployGroup(group: DedupGroup): Promise<number> {
   }
 
   if (deployCodexSkill) {
-    const result = await deploy(group.slug, 'codex', 'skill');
+    const result = await deploy(group.slug, 'agents', 'skill');
     if (result.action === 'deployed') count++;
   } else if (deployCodexPrompt) {
-    const result = await deploy(group.slug, 'codex', 'legacy-prompt');
+    const result = await deploy(group.slug, 'agents', 'legacy-prompt');
     if (result.action === 'deployed') count++;
   }
 
@@ -273,10 +273,10 @@ async function importFromPath(dirPath: string, dryRun?: boolean): Promise<void> 
     slug,
     content,
     source: { type: 'created', originalPath: skillMdPath },
-    deployAs: { cc: 'skill', codex: 'skill' },
+    deployAs: { cc: 'skill', agents: 'skill' },
   });
 
-  const deployed = await deploySingleSkill(slug, ['cc', 'codex']);
+  const deployed = await deploySingleSkill(slug, ['cc', 'agents']);
 
   console.log(chalk.green(`\n✓ Imported skill: ${slug}`));
   console.log(chalk.dim(`  ${skillFile(slug)}`));

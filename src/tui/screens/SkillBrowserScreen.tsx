@@ -26,7 +26,7 @@ interface SkillBrowserScreenProps {
   onTextInputChange?: (active: boolean) => void;
 }
 
-type FilterOption = 'all' | 'cc' | 'codex' | 'project' | 'undeployed' | 'remote';
+type FilterOption = 'all' | 'cc' | 'agents' | 'project' | 'undeployed' | 'remote';
 
 type Step = 'main' | 'confirm-delete' | 'confirm-bulk-delete';
 
@@ -49,7 +49,7 @@ export function SkillBrowserScreen({
   const [bulkDeleteTargets, setBulkDeleteTargets] = useState<string[]>([]);
   const [bulkDeleteWarning, setBulkDeleteWarning] = useState('');
   const [deployScope, setDeployScope] = useState<'user' | 'project'>('user');
-  const [deployTools, setDeployTools] = useState<{ cc: boolean; codex: boolean }>({ cc: true, codex: true });
+  const [deployTools, setDeployTools] = useState<{ cc: boolean; agents: boolean }>({ cc: true, agents: true });
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState<'success' | 'error'>('success');
 
@@ -83,8 +83,8 @@ export function SkillBrowserScreen({
 
     if (filter === 'cc') {
       result = result.filter((s) => relevantLinks.some((l) => l.slug === s.slug && l.tool === 'cc'));
-    } else if (filter === 'codex') {
-      result = result.filter((s) => relevantLinks.some((l) => l.slug === s.slug && l.tool === 'codex'));
+    } else if (filter === 'agents') {
+      result = result.filter((s) => relevantLinks.some((l) => l.slug === s.slug && l.tool === 'agents'));
     } else if (filter === 'project') {
       result = result.filter((s) =>
         relevantLinks.some((l) => l.slug === s.slug && l.scope === 'project' && l.projectRoot === projectRoot),
@@ -110,17 +110,17 @@ export function SkillBrowserScreen({
 
   const resetDeployTarget = () => {
     setDeployScope('user');
-    setDeployTools({ cc: true, codex: true });
+    setDeployTools({ cc: true, agents: true });
   };
 
-  const toolsLabel = deployTools.cc && deployTools.codex ? 'CC + Codex' : deployTools.cc ? 'CC only' : 'Codex only';
+  const toolsLabel = deployTools.cc && deployTools.agents ? 'CC + Agents' : deployTools.cc ? 'CC only' : 'Agents only';
 
   const bulkDeploy = async () => {
     const slugs = [...selectedSlugs];
-    const tools = (Object.entries(deployTools) as ['cc' | 'codex', boolean][]).filter(([, on]) => on).map(([t]) => t);
+    const tools = (Object.entries(deployTools) as ['cc' | 'agents', boolean][]).filter(([, on]) => on).map(([t]) => t);
     if (tools.length === 0) {
       setMessageType('error');
-      setMessage('Select at least one tool (c for CC, x for Codex)');
+      setMessage('Select at least one tool (c for CC, x for Agents)');
       return;
     }
     let ok = 0;
@@ -166,11 +166,11 @@ export function SkillBrowserScreen({
 
   const bulkUndeploy = async () => {
     const slugs = [...selectedSlugs];
-    const noToolSelected = !deployTools.cc && !deployTools.codex;
+    const noToolSelected = !deployTools.cc && !deployTools.agents;
     // When no tools are toggled on ("undeploy only" mode), undeploy from both
-    const tools: ('cc' | 'codex')[] = noToolSelected
-      ? ['cc', 'codex']
-      : (Object.entries(deployTools) as ['cc' | 'codex', boolean][]).filter(([, on]) => on).map(([t]) => t);
+    const tools: ('cc' | 'agents')[] = noToolSelected
+      ? ['cc', 'agents']
+      : (Object.entries(deployTools) as ['cc' | 'agents', boolean][]).filter(([, on]) => on).map(([t]) => t);
     let ok = 0;
     let skip = 0;
     let fail = 0;
@@ -194,7 +194,7 @@ export function SkillBrowserScreen({
     onRefresh();
     setMessageType(fail > 0 ? 'error' : 'success');
     const parts: string[] = [];
-    const undeployLabel = noToolSelected ? 'CC + Codex' : toolsLabel;
+    const undeployLabel = noToolSelected ? 'CC + Agents' : toolsLabel;
     if (ok > 0) parts.push(`Undeployed ${ok} skill${ok !== 1 ? 's' : ''} from ${undeployLabel} (${scopeLabel})`);
     if (skip > 0) parts.push(`${skip} already undeployed`);
     if (fail > 0) parts.push(`${fail} failed`);
@@ -338,8 +338,8 @@ export function SkillBrowserScreen({
       }
       if (input === 'f') {
         const filters: FilterOption[] = hasProjectLinks
-          ? ['all', 'cc', 'codex', 'project', 'undeployed', 'remote']
-          : ['all', 'cc', 'codex', 'undeployed', 'remote'];
+            ? ['all', 'cc', 'agents', 'project', 'undeployed', 'remote']
+            : ['all', 'cc', 'agents', 'undeployed', 'remote'];
         const idx = filters.indexOf(filter);
         setFilter(filters[(idx + 1) % filters.length]);
         setSelectedIndex(0);
@@ -365,7 +365,7 @@ export function SkillBrowserScreen({
           setDeployTools((prev) => ({ ...prev, cc: !prev.cc }));
         }
         if (input === 'x') {
-          setDeployTools((prev) => ({ ...prev, codex: !prev.codex }));
+          setDeployTools((prev) => ({ ...prev, agents: !prev.agents }));
         }
       }
       // Bulk deploy
@@ -400,8 +400,8 @@ export function SkillBrowserScreen({
   );
 
   const filters: FilterOption[] = hasProjectLinks
-    ? ['all', 'cc', 'codex', 'project', 'undeployed', 'remote']
-    : ['all', 'cc', 'codex', 'undeployed', 'remote'];
+    ? ['all', 'cc', 'agents', 'project', 'undeployed', 'remote']
+    : ['all', 'cc', 'agents', 'undeployed', 'remote'];
 
   if (isTerminalTooSmall(width, height, 90, 24)) {
     return <TerminalSizeWarning screenName="Browser" width={width} height={height} minWidth={90} minHeight={24} />;
@@ -474,10 +474,10 @@ export function SkillBrowserScreen({
           <Text color={deployTools.cc ? colors.cc : colors.dim} bold={deployTools.cc}>
             {deployTools.cc ? `${symbols.deployed} CC` : `${symbols.notDeployed} CC`}
           </Text>
-          <Text color={deployTools.codex ? colors.codex : colors.dim} bold={deployTools.codex}>
-            {deployTools.codex ? `${symbols.deployed} Codex` : `${symbols.notDeployed} Codex`}
+          <Text color={deployTools.agents ? colors.codex : colors.dim} bold={deployTools.agents}>
+            {deployTools.agents ? `${symbols.deployed} Agents` : `${symbols.notDeployed} Agents`}
           </Text>
-          {!deployTools.cc && !deployTools.codex && <Text color={colors.warning}>(undeploy only)</Text>}
+          {!deployTools.cc && !deployTools.agents && <Text color={colors.warning}>(undeploy only)</Text>}
           <Text color={colors.dim}>{symbols.separator}</Text>
           <Text color={colors.dim}>
             Tab<Text color={colors.muted}> scope</Text> c/x<Text color={colors.muted}> tools</Text>

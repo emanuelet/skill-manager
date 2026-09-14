@@ -169,9 +169,9 @@ export async function mcpUninstallCommand(opts: McpSetupOptions): Promise<McpCom
 
 function resolveSetupTools(tool: string): ToolName[] {
   if (tool === 'cc') return ['cc'];
-  if (tool === 'codex') return ['codex'];
-  if (tool === 'all') return ['cc', 'codex'];
-  throw new SmError(`Unknown tool "${tool}". Must be cc, codex, or all.`, 'USAGE_ERROR');
+  if (tool === 'agents' || tool === 'codex') return ['agents'];
+  if (tool === 'all') return ['cc', 'agents'];
+  throw new SmError(`Unknown tool "${tool}". Must be cc, agents, or all.`, 'USAGE_ERROR');
 }
 
 const VALID_SCOPES = ['user', 'local', 'project'];

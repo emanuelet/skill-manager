@@ -222,7 +222,7 @@ describe('matchSkillTriggers', () => {
     });
     await addLinkRecord({
       slug: 'full-skill',
-      tool: 'codex',
+      tool: 'agents',
       format: 'skill',
       linkPath: '/tmp/fake/codex',
       targetPath: '/tmp/fake/target',

@@ -33,7 +33,7 @@ interface SkillDetailScreenProps {
 }
 
 type ScopeMode = 'user' | 'project';
-type Tool = 'cc' | 'codex';
+type Tool = 'cc' | 'agents';
 type MessageType = 'success' | 'warning' | 'error';
 type Step = 'main' | 'confirm-delete' | 'editing-frontmatter';
 
@@ -56,9 +56,9 @@ export function SkillDetailScreen({
   const [depDeployStatus, setDepDeployStatus] = useState<Record<string, boolean>>({});
   const [linkHealth, setLinkHealth] = useState<Record<string, boolean>>({
     'user:cc': true,
-    'user:codex': true,
+    'user:agents': true,
     'project:cc': true,
-    'project:codex': true,
+    'project:agents': true,
   });
 
   // Frontmatter editor state
@@ -89,7 +89,7 @@ export function SkillDetailScreen({
   const hasProjectContext = projectCtx.hasClaudeDir || projectCtx.hasCodexDir;
 
   const scopeLabel = (scope: ScopeMode): string => (scope === 'user' ? 'User' : `Project (${projectName})`);
-  const toolLabel = (tool: Tool): string => (tool === 'cc' ? 'CC' : 'Codex');
+  const toolLabel = (tool: Tool): string => (tool === 'cc' ? 'CC' : 'Agents');
 
   const loadScreenData = useCallback(async () => {
     setLoading(true);
@@ -101,9 +101,9 @@ export function SkillDetailScreen({
 
       const nextHealth: Record<string, boolean> = {
         'user:cc': true,
-        'user:codex': true,
+        'user:agents': true,
         'project:cc': true,
-        'project:codex': true,
+        'project:agents': true,
       };
 
       for (const link of l) {
@@ -151,9 +151,9 @@ export function SkillDetailScreen({
   const projectLinks = links.filter((l) => l.scope === 'project' && l.projectRoot === projectRoot);
 
   const userCC = userLinks.some((l) => l.tool === 'cc');
-  const userCodex = userLinks.some((l) => l.tool === 'codex');
+  const userAgents = userLinks.some((l) => l.tool === 'agents');
   const projCC = projectLinks.some((l) => l.tool === 'cc');
-  const projCodex = projectLinks.some((l) => l.tool === 'codex');
+  const projAgents = projectLinks.some((l) => l.tool === 'agents');
 
   const refreshLinks = async () => {
     await loadScreenData();
@@ -171,7 +171,7 @@ export function SkillDetailScreen({
     }
 
     const meta = await readMeta(skillSlug);
-    const key = tool === 'cc' ? 'cc' : 'codex';
+    const key = tool === 'cc' ? 'cc' : 'agents';
     if (meta.deployAs[key] === 'none') {
       meta.deployAs[key] = 'skill';
       await writeMeta(skillSlug, meta);
@@ -210,7 +210,7 @@ export function SkillDetailScreen({
   };
 
   const applyScopeAction = async (scope: ScopeMode, action: 'deploy' | 'remove') => {
-    const tools: Tool[] = ['cc', 'codex'];
+    const tools: Tool[] = ['cc', 'agents'];
     let changed = 0;
     let unchanged = 0;
 
@@ -400,7 +400,7 @@ export function SkillDetailScreen({
       if (input === 'u') setActiveScope('user');
       if (input === 'p') setActiveScope('project');
       if (input === 'c') void toggleToolInScope(activeScope, 'cc');
-      if (input === 'x') void toggleToolInScope(activeScope, 'codex');
+      if (input === 'x') void toggleToolInScope(activeScope, 'agents');
       if (input === '+') void applyScopeAction(activeScope, 'deploy');
       if (input === '-') void applyScopeAction(activeScope, 'remove');
       if (input === 'D') {
@@ -467,17 +467,17 @@ export function SkillDetailScreen({
         <ScopeStateCard
           label="User"
           ccDeployed={userCC}
-          codexDeployed={userCodex}
+          agentsDeployed={userAgents}
           ccHealthy={linkHealth['user:cc']}
-          codexHealthy={linkHealth['user:codex']}
+          agentsHealthy={linkHealth['user:agents']}
           active={activeScope === 'user'}
         />
         <ScopeStateCard
           label={`Project (${projectName})`}
           ccDeployed={projCC}
-          codexDeployed={projCodex}
+          agentsDeployed={projAgents}
           ccHealthy={linkHealth['project:cc']}
-          codexHealthy={linkHealth['project:codex']}
+          agentsHealthy={linkHealth['project:agents']}
           active={activeScope === 'project'}
         />
       </Box>
@@ -559,7 +559,7 @@ export function SkillDetailScreen({
       <HelpBar
         bindings={[
           { key: 'Tab', action: 'switch scope' },
-          { key: 'c/x', action: 'toggle CC/Codex' },
+          { key: 'c/x', action: 'toggle CC/Agents' },
           { key: '+', action: 'deploy all' },
           { key: '-', action: 'remove all' },
           { key: 'e/E', action: 'edit' },
@@ -575,16 +575,16 @@ export function SkillDetailScreen({
 function ScopeStateCard({
   label,
   ccDeployed,
-  codexDeployed,
+  agentsDeployed,
   ccHealthy,
-  codexHealthy,
+  agentsHealthy,
   active,
 }: {
   label: string;
   ccDeployed: boolean;
-  codexDeployed: boolean;
+  agentsDeployed: boolean;
   ccHealthy: boolean;
-  codexHealthy: boolean;
+  agentsHealthy: boolean;
   active: boolean;
 }) {
   return (
@@ -599,7 +599,7 @@ function ScopeStateCard({
         {label}
       </Text>
       <ToolState tool="cc" deployed={ccDeployed} healthy={ccHealthy} />
-      <ToolState tool="codex" deployed={codexDeployed} healthy={codexHealthy} />
+      <ToolState tool="agents" deployed={agentsDeployed} healthy={agentsHealthy} />
     </Box>
   );
 }
@@ -617,7 +617,7 @@ function DepRow({ slug, deployed }: { slug: string; deployed: boolean }) {
 }
 
 function ToolState({ tool, deployed, healthy }: { tool: Tool; deployed: boolean; healthy: boolean }) {
-  const toolName = tool === 'cc' ? 'CC' : 'Codex';
+  const toolName = tool === 'cc' ? 'CC' : 'Agents';
   const toolColor = tool === 'cc' ? colors.cc : colors.codex;
   const icon = deployed ? (healthy ? symbols.deployed : symbols.broken) : symbols.notDeployed;
   const state = deployed ? (healthy ? 'deployed' : 'broken') : 'not deployed';

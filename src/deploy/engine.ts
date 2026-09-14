@@ -7,7 +7,7 @@ import {
   type DeployFormat,
   type DeployScope,
   CC_SKILLS_DIR,
-  CODEX_SKILLS_DIR,
+  AGENTS_SKILLS_DIR,
   deployLinkPath,
   projectDeployTargetDir,
   resolveProjectRoot,
@@ -77,7 +77,7 @@ export async function deploy(
 
   switch (format) {
     case 'skill': {
-      const targetDir = tool === 'cc' ? CC_SKILLS_DIR : CODEX_SKILLS_DIR;
+      const targetDir = tool === 'cc' ? CC_SKILLS_DIR : AGENTS_SKILLS_DIR;
       result = await deploySkill(slug, tool, targetDir);
       break;
     }
@@ -147,7 +147,7 @@ export async function undeploy(
       // Use directory from recorded link path if available, otherwise compute from constants
       const targetDir = existingRecord
         ? path.dirname(existingRecord.linkPath)
-        : (tool === 'cc' ? CC_SKILLS_DIR : CODEX_SKILLS_DIR);
+        : (tool === 'cc' ? CC_SKILLS_DIR : AGENTS_SKILLS_DIR);
       removed = await undeploySkill(slug, targetDir);
       break;
     }
@@ -253,6 +253,6 @@ export async function undeployProject(
 }
 
 function getFormat(deployAs: DeployAs, tool: ToolName): DeployFormat {
-  const raw = tool === 'cc' ? deployAs.cc : deployAs.codex;
+  const raw = tool === 'cc' ? deployAs.cc : deployAs.agents;
   return raw as DeployFormat;
 }

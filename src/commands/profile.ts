@@ -61,7 +61,7 @@ async function profileCreateAction(name: string): Promise<void> {
 
   const profile: Profile = {
     name,
-    skills: slugs.map((s) => ({ name: s, tools: ['cc', 'codex'] as ('cc' | 'codex')[] })),
+    skills: slugs.map((s) => ({ name: s, tools: ['cc', 'agents'] as ('cc' | 'agents')[] })),
     createdAt: new Date().toISOString(),
   };
 

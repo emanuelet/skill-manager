@@ -35,7 +35,7 @@ describe('removeCommand', () => {
 
     const joined = output.join('\n');
     expect(joined).toContain('Removed removable from cc');
-    expect(joined).toContain('Removed removable from codex');
+    expect(joined).toContain('Removed removable from agents');
   });
 
   it('removes from single tool when specified', async () => {
@@ -52,7 +52,7 @@ describe('removeCommand', () => {
 
     const joined = output.join('\n');
     expect(joined).toContain('Removed single-remove from cc');
-    expect(joined).not.toContain('Removed single-remove from codex');
+    expect(joined).not.toContain('Removed single-remove from agents');
   });
 
   it('purges skill entirely', async () => {

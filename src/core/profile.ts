@@ -8,7 +8,9 @@ const ProfileSchema = z.object({
   description: z.string().optional(),
   skills: z.array(z.object({
     name: z.string(),
-    tools: z.array(z.enum(['cc', 'codex'])).default(['cc', 'codex']),
+    tools: z.array(z.enum(['cc', 'agents', 'codex'])).default(['cc', 'agents']).transform(
+      (tools) => [...new Set(tools.map((tool) => tool === 'codex' ? 'agents' : tool))],
+    ),
   })).default([]),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),

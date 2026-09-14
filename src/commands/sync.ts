@@ -29,8 +29,8 @@ export async function syncCommand(opts: SyncOptions): Promise<void> {
       continue;
     }
     // Deprecated format: legacy-prompt should migrate to skill
-    if (link.format === 'legacy-prompt' && link.tool === 'codex') {
-      const canonicalPath = deployLinkPath('codex', 'skill', link.slug)!;
+    if (link.format === 'legacy-prompt' && link.tool === 'agents') {
+      const canonicalPath = deployLinkPath('agents', 'skill', link.slug)!;
       deprecated.push({ ...link, reason: 'format', canonicalPath });
       continue;
     }
@@ -117,9 +117,9 @@ export async function syncCommand(opts: SyncOptions): Promise<void> {
             // Undeploy old format, update meta, deploy as skill
             await undeploy(r.slug, r.tool as ToolName, r.format as DeployFormat);
             const meta = await readMeta(r.slug);
-            meta.deployAs.codex = 'skill';
+            meta.deployAs.agents = 'skill';
             await writeMeta(r.slug, meta);
-            const result = await deploy(r.slug, 'codex', 'skill');
+            const result = await deploy(r.slug, 'agents', 'skill');
             if (result.action === 'deployed') {
               console.log(`  ${chalk.green('✓')} Migrated: ${r.slug} (${r.format} → skill)`);
               migrated++;

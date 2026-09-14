@@ -152,7 +152,7 @@ export async function matchSkillTriggers(
         const meta = await readMeta(skill.slug);
         const targetTools: string[] = [];
         if (meta.deployAs.cc !== 'none') targetTools.push('cc');
-        if (meta.deployAs.codex !== 'none') targetTools.push('codex');
+        if (meta.deployAs.agents !== 'none') targetTools.push('agents');
         isDeployed = targetTools.length > 0 && targetTools.every(
           (tool) => userLinks.some((l) => l.tool === tool),
         );

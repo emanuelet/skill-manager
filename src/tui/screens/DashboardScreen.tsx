@@ -189,9 +189,9 @@ export function DashboardScreen({
   const userCount = new Set(userLinks.map((l) => l.slug)).size;
   const projectCount = new Set(projectLinks.map((l) => l.slug)).size;
   const userCcCount = new Set(userLinks.filter((l) => l.tool === 'cc').map((l) => l.slug)).size;
-  const userCodexCount = new Set(userLinks.filter((l) => l.tool === 'codex').map((l) => l.slug)).size;
+  const userAgentsCount = new Set(userLinks.filter((l) => l.tool === 'agents').map((l) => l.slug)).size;
   const projectCcCount = new Set(projectLinks.filter((l) => l.tool === 'cc').map((l) => l.slug)).size;
-  const projectCodexCount = new Set(projectLinks.filter((l) => l.tool === 'codex').map((l) => l.slug)).size;
+  const projectAgentsCount = new Set(projectLinks.filter((l) => l.tool === 'agents').map((l) => l.slug)).size;
   const total = Math.max(skills.length, 1);
 
   return (
@@ -203,7 +203,7 @@ export function DashboardScreen({
           total={total}
           color={colors.primary}
           ccCount={userCcCount}
-          codexCount={userCodexCount}
+          agentsCount={userAgentsCount}
         />
         <ScopeBarRow
           label="Project"
@@ -211,7 +211,7 @@ export function DashboardScreen({
           total={total}
           color={colors.primary}
           ccCount={projectCcCount}
-          codexCount={projectCodexCount}
+          agentsCount={projectAgentsCount}
         />
       </Box>
 
@@ -301,14 +301,14 @@ function ScopeBarRow({
   total,
   color,
   ccCount,
-  codexCount,
+  agentsCount,
 }: {
   label: string;
   value: number;
   total: number;
   color: string;
   ccCount: number;
-  codexCount: number;
+  agentsCount: number;
 }) {
   return (
     <Box>
@@ -319,7 +319,7 @@ function ScopeBarRow({
       <Text color={colors.muted}>{`  ${String(value).padStart(2)}/${total}`.padEnd(10)}</Text>
       <Text color={colors.cc}>CC {ccCount}</Text>
       <Text color={colors.dim}> {'\u00B7'} </Text>
-      <Text color={colors.codex}>Codex {codexCount}</Text>
+      <Text color={colors.codex}>Agents {agentsCount}</Text>
     </Box>
   );
 }
