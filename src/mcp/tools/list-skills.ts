@@ -6,6 +6,8 @@ import { withToolHandler } from './helpers.js';
 export const listSkillsSchema = z.object({
   tag: z.string().optional().describe('Filter by tag'),
   deployed_only: z.boolean().optional().describe('Show only deployed skills'),
+  offset: z.number().int().min(0).optional().describe('Number of matching skills to skip (default: 0)'),
+  limit: z.number().int().min(1).max(100).optional().describe('Maximum skills to return (default: 20, max: 100)'),
 });
 
 export const listSkillsHandler = withToolHandler(
@@ -31,10 +33,16 @@ export const listSkillsHandler = withToolHandler(
       };
     });
 
-    if (args.deployed_only) {
-      return results.filter((r) => r.deployedTo.length > 0);
-    }
+    const filtered = args.deployed_only ? results.filter((r) => r.deployedTo.length > 0) : results;
+    const offset = args.offset ?? 0;
+    const limit = args.limit ?? 20;
 
-    return results;
+    return {
+      skills: filtered.slice(offset, offset + limit),
+      total: filtered.length,
+      offset,
+      limit,
+      has_more: offset + limit < filtered.length,
+    };
   },
 );

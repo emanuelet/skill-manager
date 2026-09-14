@@ -4,10 +4,9 @@ A unified tool for managing skills across **Claude Code**, **Codex CLI**, and **
 
 ## Features
 
-- **Bifrost sync** — `sm bifrost sync` reconciles Bifrost with the canonical store by update time. Equal timestamps retain a local conflict copy and prefer Bifrost.
-- **Ranked retrieval** — SQLite FTS5, fuzzy matching, and usage-aware ranking power CLI and MCP search.
+- **Bifrost sync** — `sm source bifrost sync` reconciles Bifrost with the canonical store by update time. Equal timestamps retain a local conflict copy and prefer Bifrost.
+- **Ranked retrieval** — SQLite FTS5 BM25, fuzzy matching, and usage-aware ranking power CLI and MCP search.
 - **Shared agents path** — `~/.agents/skills/` serves both Codex CLI and OpenCode.
-
 - **Canonical store** — All skills live in `~/.skill-manager/skills/`, organized as directories with `SKILL.md` files and metadata
 - **Symlink deployment** — Atomic symlinks into each tool's native directories; no files are duplicated
 - **Automatic deduplication** — Import detects identical files across tools and merges them
@@ -198,6 +197,20 @@ When installing skills that already exist locally, `sm install` compares content
 | `sm source list [--json]`           | List configured sources with skill counts and sync status        |
 | `sm source sync [name]`             | Pull updates from one or all sources                             |
 | `sm source remove <name> [--purge]` | Remove a source; `--purge` deletes the cloned repo               |
+
+### Bifrost
+
+Bifrost is an HTTP synchronization endpoint, separate from Git-backed `sm source` entries. Sync it with:
+
+```bash
+# Use BIFROST_URL, or http://localhost:8090 when it is unset
+sm source bifrost sync
+
+# Use an explicit Bifrost endpoint
+sm source bifrost sync --url https://bifrost.example.com
+```
+
+The command reconciles remote and canonical skills by update time, deploys pulled skills to configured targets, and stores its synchronization state in `~/.skill-manager/bifrost.json`. Equal timestamps preserve the local copy under `~/.skill-manager/conflicts/bifrost/` and prefer Bifrost.
 
 ### Publishing
 
@@ -686,12 +699,12 @@ Once registered, the AI assistant gains access to these tools:
 
 | Tool             | Description                                                                         |
 | ---------------- | ----------------------------------------------------------------------------------- |
-| `list_skills`    | List all managed skills, optionally filtered by tag or deployment status            |
+| `list_skills`    | List managed skills with `offset`/`limit` pagination and optional filters            |
 | `get_skill`      | Read a skill's full markdown content, metadata, and file listing                    |
 | `search_skills`  | Search skills by name, description, tags, or content body                           |
 | `deploy_skill`   | Deploy a skill to Claude Code and/or Codex CLI with automatic dependency resolution |
 | `undeploy_skill` | Remove a skill deployment, with dependent safety checks                             |
-| `suggest_skills` | Get trigger-based skill suggestions for a project directory                         |
+| `suggest_skills` | Get paginated trigger-based skill suggestions for a project directory               |
 | `get_analytics`  | View usage statistics, stale skills, and unused skills                              |
 | `list_sources`   | List configured remote skill sources with sync status                               |
 | `sync_source`    | Sync one or all remote skill sources (git pull + rescan)                            |
@@ -702,6 +715,10 @@ Once registered, the AI assistant gains access to these tools:
 | --------------------- | ---------------------------------------------------------- |
 | `skill://{slug}`      | Raw markdown content of a specific skill                   |
 | `skill-catalog://all` | JSON catalog of all skills (slug, name, description, tags) |
+
+### Pagination
+
+`list_skills` and `suggest_skills` return 20 items by default (up to 100). Pass `offset` and `limit` to request another page. Responses include `total`, `offset`, `limit`, and `has_more`.
 
 ### Example Usage
 

@@ -48,6 +48,7 @@ All paths are defined in `src/fs/paths.ts` and respect `SM_HOME` overrides.
 | `~/.skill-manager/config.toml`  | User configuration                      |
 | `~/.skill-manager/state.json`   | Deploy state (link records, timestamps) |
 | `~/.skill-manager/sources.json` | Remote source registry                  |
+| `~/.skill-manager/bifrost.json` | Bifrost synchronization state           |
 | `~/.skill-manager/sources/`     | Cloned source repositories              |
 | `~/.skill-manager/profiles/`    | Saved deployment profiles               |
 | `~/.skill-manager/backups/`     | Skill store backups                     |

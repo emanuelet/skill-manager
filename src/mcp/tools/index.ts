@@ -42,7 +42,7 @@ export function registerTools(server: McpServer): void {
 
   server.registerTool(
     'suggest_skills',
-    { description: 'Get trigger-based skill suggestions for a project directory', inputSchema: suggestSkillsSchema },
+    { description: 'Get paginated trigger-based skill suggestions for a project directory', inputSchema: suggestSkillsSchema },
     suggestSkillsHandler,
   );
 

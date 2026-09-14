@@ -133,7 +133,7 @@ describe('MCP tool registration', () => {
 
 describe('MCP tool handlers', () => {
   describe('list_skills', () => {
-    it('returns all skills', async () => {
+    it('returns the first page of skills', async () => {
       await createTestSkill('alpha', { name: 'Alpha', description: 'First', tags: ['util'] });
       await createTestSkill('beta', { name: 'Beta', description: 'Second', tags: ['dev'] });
 
@@ -142,9 +142,10 @@ describe('MCP tool handlers', () => {
 
       expect(result.isError).toBeUndefined();
       const data = JSON.parse(result.content[0].text);
-      expect(data).toHaveLength(2);
-      expect(data[0].slug).toBe('alpha');
-      expect(data[1].slug).toBe('beta');
+      expect(data.total).toBe(2);
+      expect(data.has_more).toBe(false);
+      expect(data.skills[0].slug).toBe('alpha');
+      expect(data.skills[1].slug).toBe('beta');
     });
 
     it('filters by tag', async () => {
@@ -155,8 +156,8 @@ describe('MCP tool handlers', () => {
       const result = await listSkillsHandler({ tag: 'dev' });
 
       const data = JSON.parse(result.content[0].text);
-      expect(data).toHaveLength(1);
-      expect(data[0].slug).toBe('beta');
+      expect(data.total).toBe(1);
+      expect(data.skills[0].slug).toBe('beta');
     });
 
     it('filters deployed_only', async () => {
@@ -173,9 +174,22 @@ describe('MCP tool handlers', () => {
       const result = await listSkillsHandler({ deployed_only: true });
 
       const data = JSON.parse(result.content[0].text);
-      expect(data).toHaveLength(1);
-      expect(data[0].slug).toBe('alpha');
-      expect(data[0].deployedTo).toContain('cc');
+      expect(data.total).toBe(1);
+      expect(data.skills[0].slug).toBe('alpha');
+      expect(data.skills[0].deployedTo).toContain('cc');
+    });
+
+    it('paginates matching skills', async () => {
+      await createTestSkill('alpha', { name: 'Alpha', description: 'First' });
+      await createTestSkill('beta', { name: 'Beta', description: 'Second' });
+
+      const { listSkillsHandler } = await import('../../src/mcp/tools/list-skills.js');
+      const result = await listSkillsHandler({ offset: 1, limit: 1 });
+      const data = JSON.parse(result.content[0].text);
+
+      expect(data).toMatchObject({ total: 2, offset: 1, limit: 1, has_more: false });
+      expect(data.skills).toHaveLength(1);
+      expect(data.skills[0].slug).toBe('beta');
     });
   });
 
@@ -325,6 +339,36 @@ describe('MCP tool handlers', () => {
         const data = JSON.parse(result.content[0].text);
         expect(data.suggestions).toHaveLength(1);
         expect(data.suggestions[0].slug).toBe('ts-helper');
+        expect(data).toMatchObject({ total: 1, offset: 0, limit: 20, has_more: false });
+      } finally {
+        await fs.remove(projectDir);
+      }
+    });
+
+    it('paginates suggestions', async () => {
+      await createTestSkill('ts-first', {
+        name: 'First TypeScript Helper',
+        description: 'TypeScript support',
+        triggers: { files: ['tsconfig.json'] },
+      });
+      await createTestSkill('ts-second', {
+        name: 'Second TypeScript Helper',
+        description: 'TypeScript support',
+        triggers: { files: ['tsconfig.json'] },
+      });
+
+      const projectDir = path.join(os.tmpdir(), `sm-mcp-suggest-page-${Date.now()}`);
+      await fs.ensureDir(projectDir);
+      await fs.writeFile(path.join(projectDir, 'tsconfig.json'), '{}', 'utf-8');
+
+      try {
+        const { suggestSkillsHandler } = await import('../../src/mcp/tools/suggest-skills.js');
+        const result = await suggestSkillsHandler({ project_root: projectDir, limit: 1, offset: 1 });
+        const data = JSON.parse(result.content[0].text);
+
+        expect(data).toMatchObject({ total: 2, offset: 1, limit: 1, has_more: false });
+        expect(data.suggestions).toHaveLength(1);
+        expect(data.suggestions[0].slug).toBe('ts-second');
       } finally {
         await fs.remove(projectDir);
       }

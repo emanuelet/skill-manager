@@ -10,10 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ### Changed
 
 - Renamed the shared Codex CLI/OpenCode deployment target from `codex` to `agents`; legacy `codex` configuration and state values are normalized automatically
+- Moved Bifrost synchronization to `sm source bifrost sync`
 
 ### Added
 
 - `triggers.always` for low-confidence skill suggestions in every project
+- Pagination for MCP `list_skills` and `suggest_skills` responses
 
 ## [1.1.0] - 2026-09-14
 

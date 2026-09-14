@@ -381,12 +381,6 @@ program
 // Source management subcommand group
 const source = program.command('source').description('Manage remote skill repositories');
 
-const bifrost = program.command('bifrost').description('Synchronize the Bifrost skill source');
-bifrost.command('sync').option('--url <url>', 'Bifrost base URL').action(withErrorHandler(async (opts) => {
-  const { bifrostSyncCommand } = await import('../src/commands/bifrost.js');
-  await bifrostSyncCommand(opts);
-}));
-
 source
   .command('add <url>')
   .description('Add a git repository as a skill source')
@@ -397,6 +391,12 @@ source
       await sourceAddCommand(url as string, opts);
     }),
   );
+
+const bifrost = source.command('bifrost').description('Synchronize the Bifrost skill source');
+bifrost.command('sync').option('--url <url>', 'Bifrost base URL').action(withErrorHandler(async (opts) => {
+  const { bifrostSyncCommand } = await import('../src/commands/bifrost.js');
+  await bifrostSyncCommand(opts);
+}));
 
 source
   .command('list')

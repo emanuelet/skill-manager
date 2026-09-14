@@ -9,6 +9,8 @@ import { withToolHandler } from './helpers.js';
 export const suggestSkillsSchema = z.object({
   project_root: z.string().describe('Directory to scan'),
   auto_deploy: z.boolean().optional().describe('Deploy matching skills (default: false)'),
+  offset: z.number().int().min(0).optional().describe('Number of matching suggestions to skip (default: 0)'),
+  limit: z.number().int().min(1).max(100).optional().describe('Maximum suggestions to return (default: 20, max: 100)'),
 });
 
 export const suggestSkillsHandler = withToolHandler(
@@ -16,6 +18,15 @@ export const suggestSkillsHandler = withToolHandler(
     const projectRoot = resolveProjectRoot(args.project_root);
     const signals = await scanProjectSignals(projectRoot);
     const suggestions = await matchSkillTriggers(signals, undefined, projectRoot);
+    const offset = args.offset ?? 0;
+    const limit = args.limit ?? 20;
+    const page = suggestions.slice(offset, offset + limit);
+    const pagination = {
+      total: suggestions.length,
+      offset,
+      limit,
+      has_more: offset + limit < suggestions.length,
+    };
 
     if (args.auto_deploy) {
       const deployed: string[] = [];
@@ -62,9 +73,9 @@ export const suggestSkillsHandler = withToolHandler(
         if (didDeploy) deployed.push(s.slug);
       }
 
-      return { suggestions, deployed };
+      return { suggestions: page, deployed, ...pagination };
     }
 
-    return { suggestions };
+    return { suggestions: page, ...pagination };
   },
 );
