@@ -66,7 +66,7 @@ describe('matchSkillTriggers', () => {
     for (const [key, value] of Object.entries(frontmatter)) {
       if (key === 'triggers') {
         yaml += 'triggers:\n';
-        const triggers = value as Record<string, string[]>;
+        const triggers = value as { files?: string[]; dirs?: string[]; always?: boolean };
         if (triggers.files) {
           yaml += '  files:\n';
           for (const f of triggers.files) {
@@ -79,6 +79,7 @@ describe('matchSkillTriggers', () => {
             yaml += `    - "${d}"\n`;
           }
         }
+        if (triggers.always) yaml += '  always: true\n';
       } else if (Array.isArray(value)) {
         yaml += `${key}: [${value.map((v) => `"${v}"`).join(', ')}]\n`;
       } else {
@@ -164,6 +165,22 @@ describe('matchSkillTriggers', () => {
     const skills = await listSkills();
     const suggestions = await matchSkillTriggers(signals, skills);
     expect(suggestions).toHaveLength(0);
+  });
+
+  it('suggests always-on skills with low confidence', async () => {
+    const { matchSkillTriggers } = await import('../../src/core/triggers.js');
+    const { listSkills } = await import('../../src/core/skill.js');
+
+    await createTestSkill('generic-helper', {
+      name: 'Generic Helper',
+      triggers: { always: true },
+    });
+
+    const suggestions = await matchSkillTriggers({ files: [], dirs: [], languages: [] }, await listSkills());
+
+    expect(suggestions).toMatchObject([
+      { slug: 'generic-helper', confidence: 'low', matchedTriggers: ['always'] },
+    ]);
   });
 
   it('marks skill as not deployed when only deployed to one of two target tools', async () => {

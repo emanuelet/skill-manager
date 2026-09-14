@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Renamed the shared Codex CLI/OpenCode deployment target from `codex` to `agents`; legacy `codex` configuration and state values are normalized automatically
 
+### Added
+
+- `triggers.always` for low-confidence skill suggestions in every project
+
 ## [1.1.0] - 2026-09-14
 
 ### Added

@@ -7,6 +7,7 @@ depends: []
 triggers:
   files: []
   dirs: []
+  always: false
 ---
 
 # {{name}}

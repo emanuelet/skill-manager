@@ -176,6 +176,7 @@ depends: [other-skill, lib-skill]
 triggers:
   files: ['Cargo.toml', '*.rs']
   dirs: ['.github']
+  always: false
 ---
 ```
 
@@ -185,9 +186,10 @@ triggers:
 | `description`    | string   | Short description                            |
 | `version`        | string   | Semantic version                             |
 | `tags`           | string[] | Tags for categorization and search           |
-| `tools`          | string[] | Target tools (`cc`, `codex`)                 |
+| `tools`          | string[] | Target tools (`cc`, `agents`)                |
 | `depends`        | string[] | Slugs of required dependency skills          |
 | `triggers.files` | string[] | File patterns that trigger auto-activation   |
 | `triggers.dirs`  | string[] | Directory names that trigger auto-activation |
+| `triggers.always` | boolean | Always suggest this skill at low confidence  |
 
 The frontmatter schema uses `.passthrough()`, so additional custom fields are preserved.

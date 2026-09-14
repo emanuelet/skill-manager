@@ -398,6 +398,8 @@ sm suggest --json
 
 Confidence levels are based on the ratio of matched triggers: high (75%+), medium (33%+), low (<33%).
 
+For a generic recommendation that appears in every project, set `triggers.always: true`. Always-on skills are always marked `[low]` confidence and list `always` as their match reason.
+
 ## Automatic Session Activation
 
 Instead of running `sm suggest --apply` manually, you can hook into Claude Code's session startup to auto-activate relevant skills:
