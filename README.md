@@ -722,6 +722,22 @@ Once registered, the AI assistant gains access to these tools:
 
 `list_skills` and `suggest_skills` return 20 items by default (up to 100). Pass `offset` and `limit` to request another page. Responses include `total`, `offset`, `limit`, and `has_more`.
 
+### Agent Instructions
+
+Copy this into a global or project `AGENTS.md` after registering the SM MCP server. It keeps the native global skill catalog empty while letting agents discover and read only relevant skills on demand.
+
+```md
+## Skill Discovery
+
+Use the Skill Manager MCP server to discover skills. Do not scan or enumerate `~/.agents/skills`, `~/.claude/skills`, or other skill directories directly.
+
+1. When a task may benefit from a reusable workflow, call `search_skills` with task-relevant terms. Do not call `list_skills` unless an exhaustive inventory is explicitly needed.
+2. For repository-specific suggestions, call `suggest_skills` with the project root.
+3. Before following a skill, call `get_skill` for its full instructions. Read only the selected skill, not the entire catalog.
+4. Treat skills as optional guidance. Do not deploy, undeploy, promote, or remove skills unless the user explicitly asks.
+5. Follow pagination metadata: when `has_more` is true, request the next page only if the current page is insufficient.
+```
+
 ### Example Usage
 
 With the MCP server registered, you can ask your AI assistant things like:

@@ -42,9 +42,7 @@ describe('suggestCommand', () => {
       await suggestCommand({});
 
       const joined = output.join('\n');
-      expect(
-        joined.includes('No skill suggestions') || joined.includes('No project files')
-      ).toBe(true);
+      expect(joined.includes('No skill suggestions') || joined.includes('No project files')).toBe(true);
     } finally {
       process.cwd = origCwd;
     }
@@ -97,6 +95,29 @@ describe('suggestCommand', () => {
       expect(Array.isArray(parsed)).toBe(true);
       expect(parsed.length).toBeGreaterThan(0);
       expect(parsed[0].slug).toBe('json-suggest');
+    } finally {
+      process.cwd = origCwd;
+    }
+  });
+
+  it('deploys applied suggestions only to the current project', async () => {
+    await createTestSkill('project-helper', {
+      name: 'Project Helper',
+      description: 'Project-only helper',
+      triggers: { files: ['package.json'] },
+    });
+    await fs.writeFile(path.join(projectDir, 'package.json'), '{}', 'utf-8');
+
+    const origCwd = process.cwd;
+    process.cwd = () => projectDir;
+
+    try {
+      const { suggestCommand } = await import('../../../src/commands/suggest.js');
+      const { getLinkRecords } = await import('../../../src/core/state.js');
+      await suggestCommand({ apply: true });
+
+      expect(await getLinkRecords('project-helper', { scope: 'project', projectRoot: projectDir })).not.toHaveLength(0);
+      expect(await getLinkRecords('project-helper', { scope: 'user' })).toHaveLength(0);
     } finally {
       process.cwd = origCwd;
     }

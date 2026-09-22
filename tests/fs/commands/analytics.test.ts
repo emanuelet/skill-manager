@@ -35,14 +35,18 @@ describe('analyticsCommand', () => {
   });
 
   it('displays usage statistics table', async () => {
-    await createTestSkill('active', {
-      name: 'Active',
-      description: 'Heavily used',
-    }, {
-      usageCount: 42,
-      lastUsed: new Date().toISOString(),
-      lastDeployed: new Date().toISOString(),
-    });
+    await createTestSkill(
+      'active',
+      {
+        name: 'Active',
+        description: 'Heavily used',
+      },
+      {
+        usageCount: 42,
+        lastUsed: new Date().toISOString(),
+        lastDeployed: new Date().toISOString(),
+      },
+    );
     await createTestSkill('idle', {
       name: 'Idle',
       description: 'Never used',
@@ -58,12 +62,16 @@ describe('analyticsCommand', () => {
   });
 
   it('outputs JSON with --json flag', async () => {
-    await createTestSkill('json-test', {
-      name: 'JSON Test',
-      description: 'Test JSON output',
-    }, {
-      usageCount: 5,
-    });
+    await createTestSkill(
+      'json-test',
+      {
+        name: 'JSON Test',
+        description: 'Test JSON output',
+      },
+      {
+        usageCount: 5,
+      },
+    );
 
     const { analyticsCommand } = await import('../../../src/commands/analytics.js');
     await analyticsCommand({ json: true });
@@ -73,5 +81,30 @@ describe('analyticsCommand', () => {
     expect(Array.isArray(parsed)).toBe(true);
     expect(parsed[0].slug).toBe('json-test');
     expect(parsed[0].usageCount).toBe(5);
+  });
+
+  it('includes scope recommendations in --recommend JSON output', async () => {
+    vi.doMock('../../../src/core/analytics-snapshot.js', () => ({
+      getAnalyticsSnapshot: vi.fn(async () => ({ stats: [], unused: [] })),
+      getScopeRecommendations: vi.fn(async () => ({
+        available: true,
+        recommendations: [
+          { action: 'promote-project', slug: 'review', reason: 'used 3 times in this project within 7 days' },
+        ],
+      })),
+    }));
+
+    const { analyticsCommand } = await import('../../../src/commands/analytics.js');
+    await analyticsCommand({ json: true, recommend: true });
+
+    expect(JSON.parse(stdoutData.join(''))).toEqual({
+      stats: [],
+      scopeRecommendations: {
+        available: true,
+        recommendations: [
+          { action: 'promote-project', slug: 'review', reason: 'used 3 times in this project within 7 days' },
+        ],
+      },
+    });
   });
 });
