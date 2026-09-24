@@ -37,7 +37,7 @@ A unified tool for managing skills across **Claude Code**, **Codex CLI**, and **
 git clone <repo-url> && cd skill-manager
 pnpm install
 pnpm build
-pnpm link --global
+pnpm link --global .
 ```
 
 This makes the `sm` command available globally.
