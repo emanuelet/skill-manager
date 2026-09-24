@@ -8,6 +8,7 @@ import { listSkills } from './skill.js';
 
 const execFileAsync = promisify(execFile);
 const { DatabaseSync } = createRequire(import.meta.url)('node:sqlite') as typeof import('node:sqlite');
+const SKILLED_TIMEOUT_MS = 5_000;
 
 export interface UsageRecord {
   slug: string;
@@ -41,7 +42,7 @@ export async function refreshUsage(): Promise<{ source: 'skilled' | 'meta'; reco
   try {
     const { stdout } = await execFileAsync('skilled', ['list', '--sort', 'count', '--no-index', '--json'], {
       maxBuffer: 5 * 1024 * 1024,
-      timeout: 1_000,
+      timeout: SKILLED_TIMEOUT_MS,
     });
     const parsed: unknown = JSON.parse(stdout);
     if (!Array.isArray(parsed)) throw new Error('Expected JSON array');
@@ -109,7 +110,7 @@ export async function usageDetail(slug: string, project?: string): Promise<Usage
 
   const { stdout } = await execFileAsync('skilled', args, {
     maxBuffer: 5 * 1024 * 1024,
-    timeout: 1_000,
+    timeout: SKILLED_TIMEOUT_MS,
   });
   const parsed = JSON.parse(stdout) as Record<string, unknown>;
   if (typeof parsed.skill !== 'string') throw new Error('Missing skill name');

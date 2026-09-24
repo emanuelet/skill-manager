@@ -70,17 +70,25 @@ program
   );
 
 program
-  .command('remove <name>')
+  .command('remove [name]')
   .alias('rm')
   .description('Undeploy a skill from tool(s)')
   .option('--cc', 'Remove from Claude Code')
   .option('--agents', 'Remove from the shared Codex CLI and OpenCode skills directory')
   .option('--codex', 'Deprecated alias for --agents')
+  .option('--all', 'Remove all managed skills from explicitly selected tool(s)')
   .option('--purge', 'Also delete from canonical store')
   .option('--force', 'Skip dependent safety check')
   .option('--project', 'Remove from current project directory')
   .action(
     withErrorHandler(async (name, opts) => {
+      if (opts.all) {
+        if (name) throw new UsageError('Use either a skill name or --all, not both.');
+        const { removeAllCommand } = await import('../src/commands/remove.js');
+        await removeAllCommand(opts);
+        return;
+      }
+      if (!name) throw new UsageError('Specify a skill name or use --all.');
       validateSlug(name as string);
       const { removeCommand } = await import('../src/commands/remove.js');
       await removeCommand(name as string, opts);

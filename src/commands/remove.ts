@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { skillExists, deleteSkill } from '../core/skill.js';
+import { skillExists, deleteSkill, listSlugs } from '../core/skill.js';
 import { undeploy, undeployProject } from '../deploy/engine.js';
 import { buildDepGraph, getDependents } from '../core/deps.js';
 import { getLinkRecords, loadState, saveState } from '../core/state.js';
@@ -8,12 +8,50 @@ import { type ToolName } from '../fs/paths.js';
 import { SmError, SkillNotFoundError, UsageError } from '../utils/errors.js';
 
 interface RemoveOptions {
+  all?: boolean;
   cc?: boolean;
   agents?: boolean;
   codex?: boolean;
   purge?: boolean;
   force?: boolean;
   project?: boolean;
+}
+
+/** Undeploy every canonical skill from explicitly selected user-scoped tools. */
+export async function removeAllCommand(opts: RemoveOptions): Promise<void> {
+  if (opts.purge) throw new UsageError('Cannot purge all skills. Remove skills individually with --purge.');
+  if (opts.project) throw new UsageError('Cannot remove all skills from project scope.');
+  if (!opts.cc && !opts.agents && !opts.codex) {
+    throw new UsageError('Use --all with at least one target: --cc or --agents.');
+  }
+
+  const slugs = await listSlugs();
+  const tools = resolveTools(opts);
+  let removed = 0;
+
+  for (const slug of slugs) {
+    for (const tool of tools) {
+      if ((await undeploy(slug, tool)).action === 'undeployed') removed++;
+    }
+  }
+
+  // Canonical skills do not include already-purged skills, whose state records
+  // can otherwise leave broken legacy links behind indefinitely.
+  const state = await loadState();
+  const staleLinks = state.links.filter(
+    (link) => (link.scope ?? 'user') === 'user' && tools.includes(link.tool as ToolName),
+  );
+  for (const link of staleLinks) await removeLink(link.linkPath);
+  if (staleLinks.length > 0) {
+    state.links = state.links.filter((link) => !staleLinks.includes(link));
+    await saveState(state);
+  }
+
+  const detail =
+    staleLinks.length > 0 ? `; cleaned ${staleLinks.length} stale record${staleLinks.length === 1 ? '' : 's'}` : '';
+  console.log(
+    chalk.green(`✓ Removed ${removed} deployment${removed === 1 ? '' : 's'} from ${tools.join(' + ')}${detail}`),
+  );
 }
 
 export async function removeCommand(name: string, opts: RemoveOptions): Promise<void> {

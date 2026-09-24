@@ -24,8 +24,13 @@ const cache = new Keyv<unknown>({
 });
 
 export async function getAnalyticsSnapshot(staleDays = 30, unusedDays = 30): Promise<AnalyticsSnapshot> {
-  const key = `${staleDays}:${unusedDays}`;
-  const cached = (await cache.get(key)) as AnalyticsSnapshot | undefined;
+  const key = `v2:${staleDays}:${unusedDays}`;
+  let cached: AnalyticsSnapshot | undefined;
+  try {
+    cached = (await cache.get(key)) as AnalyticsSnapshot | undefined;
+  } catch {
+    // Cache contention must not prevent fresh analytics.
+  }
   if (cached) return cached;
 
   const refresh = await refreshUsage();
@@ -48,7 +53,11 @@ export async function getAnalyticsSnapshot(staleDays = 30, unusedDays = 30): Pro
     unused: findUnusedSkills(metas, unusedDays, usage),
     usageSource: refresh.source,
   };
-  await cache.set(key, snapshot, CACHE_TTL_MS);
+  try {
+    await cache.set(key, snapshot, CACHE_TTL_MS);
+  } catch {
+    // The cache is optional; another MCP request may hold its file lock.
+  }
   return snapshot;
 }
 
@@ -56,10 +65,19 @@ const DETAIL_CACHE_PREFIX = 'usage-detail:';
 
 async function cachedUsageDetail(slug: string, project?: string): Promise<UsageDetail> {
   const key = `${DETAIL_CACHE_PREFIX}${slug}:${project ?? '*'}`;
-  const cached = (await cache.get(key)) as UsageDetail | undefined;
+  let cached: UsageDetail | undefined;
+  try {
+    cached = (await cache.get(key)) as UsageDetail | undefined;
+  } catch {
+    // Fall through to skilled when the file cache is busy.
+  }
   if (cached) return cached;
   const detail = await usageDetail(slug, project);
-  await cache.set(key, detail, CACHE_TTL_MS);
+  try {
+    await cache.set(key, detail, CACHE_TTL_MS);
+  } catch {
+    // Returning fresh data is more important than caching it.
+  }
   return detail;
 }
 
@@ -88,7 +106,9 @@ export async function getScopeRecommendations(projectRoot = process.cwd()): Prom
       }
       if (record.projects >= 3 && record.lastUsed && new Date(record.lastUsed).getTime() >= globalCutoff) {
         const detail = await cachedUsageDetail(slug);
-        const details = await Promise.all(detail.projects.map((project) => cachedUsageDetail(slug, project.name)));
+        // KeyvFile writes are not concurrency-safe. Cache project details in sequence.
+        const details: UsageDetail[] = [];
+        for (const project of detail.projects) details.push(await cachedUsageDetail(slug, project.name));
         globalProjectDetails.set(slug, details);
       }
     }

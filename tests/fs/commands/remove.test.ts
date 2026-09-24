@@ -55,6 +55,46 @@ describe('removeCommand', () => {
     expect(joined).not.toContain('Removed single-remove from agents');
   });
 
+  it('removes every skill from an explicitly selected tool without purging canonical skills', async () => {
+    await createTestSkill('bulk-one', { name: 'Bulk One', description: 'Test' });
+    await createTestSkill('bulk-two', { name: 'Bulk Two', description: 'Test' });
+
+    const { deploy } = await import('../../../src/deploy/engine.js');
+    const { skillDir } = await import('../../../src/fs/paths.js');
+    await deploy('bulk-one', 'agents');
+    await deploy('bulk-two', 'agents');
+
+    const { removeAllCommand } = await import('../../../src/commands/remove.js');
+    await removeAllCommand({ all: true, agents: true });
+
+    expect(await fs.pathExists(skillDir('bulk-one'))).toBe(true);
+    expect(await fs.pathExists(skillDir('bulk-two'))).toBe(true);
+    expect(output.join('\n')).toContain('Removed 2 deployments from agents');
+  });
+
+  it('requires an explicit target when removing all skills', async () => {
+    const { removeAllCommand } = await import('../../../src/commands/remove.js');
+    await expect(removeAllCommand({ all: true })).rejects.toThrow('Use --all with at least one target');
+  });
+
+  it('cleans stale records for already-purged skills', async () => {
+    const { addLinkRecord, getLinkRecords } = await import('../../../src/core/state.js');
+    await addLinkRecord({
+      slug: 'purged-skill',
+      tool: 'agents',
+      format: 'skill',
+      linkPath: `${tmp.home}/.agents/skills/purged-skill`,
+      targetPath: `${tmp.smHome}/skills/purged-skill`,
+      createdAt: new Date().toISOString(),
+    });
+
+    const { removeAllCommand } = await import('../../../src/commands/remove.js');
+    await removeAllCommand({ all: true, agents: true });
+
+    await expect(getLinkRecords('purged-skill')).resolves.toEqual([]);
+    expect(output.join('\n')).toContain('cleaned 1 stale record');
+  });
+
   it('purges skill entirely', async () => {
     await createTestSkill('purgeable', { name: 'Purgeable', description: 'Will be purged' });
 
