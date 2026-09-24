@@ -114,7 +114,7 @@ export async function usageDetail(slug: string, project?: string): Promise<Usage
   });
   const parsed = JSON.parse(stdout) as Record<string, unknown>;
   if (typeof parsed.skill !== 'string') throw new Error('Missing skill name');
-  if (!Array.isArray(parsed.projects)) throw new Error('Missing projects');
+  const projects = Array.isArray(parsed.projects) ? parsed.projects : [];
 
   return {
     skill: parsed.skill,
@@ -122,7 +122,7 @@ export async function usageDetail(slug: string, project?: string): Promise<Usage
     sessions: Number(parsed.sessions ?? 0),
     firstUsed: typeof parsed.firstUsed === 'string' ? parsed.firstUsed : undefined,
     lastUsed: typeof parsed.lastUsed === 'string' ? parsed.lastUsed : undefined,
-    projects: parsed.projects.flatMap((value) => {
+    projects: projects.flatMap((value) => {
       if (!value || typeof value !== 'object') return [];
       const row = value as Record<string, unknown>;
       return typeof row.name === 'string' ? [{ name: row.name, count: Number(row.count ?? 0) }] : [];
