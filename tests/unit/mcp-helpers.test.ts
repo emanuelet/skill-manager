@@ -1,6 +1,16 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { success, error, withToolHandler } from '../../src/mcp/tools/helpers.js';
 import { SmError, SkillNotFoundError } from '../../src/utils/errors.js';
+import { createTmpSmHome, type TmpSmHome } from '../helpers/tmpdir.js';
+
+let tmp: TmpSmHome;
+beforeEach(async () => {
+  tmp = await createTmpSmHome();
+  vi.resetModules();
+});
+afterEach(async () => {
+  await tmp.cleanup();
+});
 
 describe('MCP helpers', () => {
   describe('success()', () => {
@@ -83,6 +93,15 @@ describe('MCP helpers', () => {
       });
       const result = await handler({ name: 'World' });
       expect(JSON.parse(result.content[0].text)).toEqual({ greeting: 'Hello World' });
+    });
+
+    it('forwards the supplied MCP usage context without replacing its session', async () => {
+      const handler = withToolHandler(async (_args, context) => context);
+      const context = { sessionId: 'connection-1', requestId: '"request-1"', client: 'test-agent' };
+      expect(JSON.parse((await handler({}, context)).content[0].text)).toMatchObject({
+        ...context,
+        invocationId: expect.any(String),
+      });
     });
   });
 });

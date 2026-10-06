@@ -27,7 +27,7 @@ function isSince(value: string | undefined, cutoff: number): boolean {
   return value !== undefined && new Date(value).getTime() >= cutoff;
 }
 
-/** Turn skilled's usage data into conservative, opt-in scope recommendations. */
+/** Turn indexed usage data into conservative, opt-in scope recommendations. */
 export function recommendScopes(input: ScopeRecommendationInput): ScopeRecommendation[] {
   const now = input.now?.getTime() ?? Date.now();
   const projectCutoff = now - SCOPE_RECOMMENDATION_DEFAULTS.projectDays * 24 * 60 * 60 * 1000;

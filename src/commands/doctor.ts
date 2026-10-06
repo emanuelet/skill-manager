@@ -17,10 +17,11 @@ import { readMeta } from '../core/meta.js';
 import { findStaleSkills, findUnusedSkills, type SkillMetaEntry } from '../core/analytics.js';
 import { getDirectDeps } from '../core/deps.js';
 import { loadSourcesRegistry } from '../core/sources.js';
-import { refreshUsage } from '../core/usage.js';
+import { refreshUsage, usageBySlug } from '../core/usage.js';
 
 export async function doctorCommand(): Promise<void> {
   await refreshUsage();
+  const usage = await usageBySlug();
   console.log(chalk.bold('\n🩺 Skill Manager — Health Check\n'));
 
   let issues = 0;
@@ -151,7 +152,7 @@ export async function doctorCommand(): Promise<void> {
     }
 
     // Unused skills check (informational only — not counted as issues)
-    const unused = findUnusedSkills(metas, 30);
+    const unused = findUnusedSkills(metas, 30, usage);
     if (unused.length > 0) {
       console.log(chalk.bold('\n  Unused skills (not used in 30+ days)'));
       for (const slug of unused) {

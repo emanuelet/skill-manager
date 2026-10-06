@@ -380,6 +380,7 @@ program
   .description('Show skill usage analytics')
   .option('--json', 'Output as JSON')
   .option('--recommend', 'Suggest project/global skill scope changes from usage')
+  .option('--searches', 'Show recorded MCP queries, results, and observed selections')
   .action(
     withErrorHandler(async (opts) => {
       const { analyticsCommand } = await import('../src/commands/analytics.js');

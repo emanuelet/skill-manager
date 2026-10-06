@@ -542,9 +542,11 @@ sm analytics --json
 
 Usage is tracked automatically by session hooks. `sm doctor` also reports unused skills (not used in 30+ days) as an informational check. `sm info <name>` shows per-skill usage stats.
 
-When [`skilled`](https://www.npmjs.com/package/@avcodes/skilled) is installed, analytics imports its ranked telemetry with `skilled list --sort count --no-index --json`. The combined analytics snapshot is cached at `~/.skill-manager/analytics-cache.json` for two minutes and shared by the CLI and MCP `sm_get_analytics` tool. Rebuild the telemetry index manually with `skilled index`; the next analytics request uses the rebuilt data after the cache expires.
+SM collects usage directly from Claude Code, OpenCode, Codex, Grok, and Droid histories, and records successful MCP `get_skill` content loads. No `skilled` installation is required. An idempotent local event ledger at `~/.skill-manager/search.sqlite` combines native and MCP activity without replacing recorded data on collector failures. MCP analytics reports source breakdowns and collector health; new activity is visible immediately.
 
-Run `sm analytics --recommend` to review opt-in deployment scope recommendations. SM keeps `skilled` as the usage source of truth and caches only its two-minute aggregate and per-skill detail snapshots. It recommends project scope after three uses in the current project within seven days, global scope after recent use in three projects within fourteen days, and demoting global skills unused for thirty days. Recommendations never change deployments automatically. `sm suggest --apply` also deploys only to the current project; deploy globally only through explicit `sm add <skill> --agents` or `--cc` commands.
+Run `sm analytics --searches` (or add `--json`) to inspect exact MCP search queries, returned skills, empty results, and selections. Selection means the same MCP session subsequently loaded a returned skill, not that it solved the task. See [usage tracking](docs/usage-tracking.md) for provider formats, historical backfill, and session boundaries.
+
+Run `sm analytics --recommend` to review opt-in deployment scope recommendations using local indexed usage details. Recommendations never change deployments automatically. `sm suggest --apply` also deploys only to the current project; deploy globally only through explicit `sm add <skill> --agents` or `--cc` commands.
 
 ## Remote Sources
 

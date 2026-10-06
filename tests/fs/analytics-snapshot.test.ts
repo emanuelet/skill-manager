@@ -16,7 +16,7 @@ afterEach(async () => {
 });
 
 describe('getScopeRecommendations', () => {
-  it('caches skilled detail queries while recommending project and global scope', async () => {
+  it('queries local details while recommending project and global scope', async () => {
     const now = new Date();
     const recent = now.toISOString();
     const firstUsed = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
@@ -33,16 +33,16 @@ describe('getScopeRecommendations', () => {
       }
       return {
         skill: slug,
-        count: project === 'project-x' ? 3 : 1,
+        count: project?.endsWith('/project-x') ? 3 : 1,
         sessions: 1,
         firstUsed,
         lastUsed: recent,
-        projects: [{ name: project, count: project === 'project-x' ? 3 : 1 }],
+        projects: [{ name: project, count: project?.endsWith('/project-x') ? 3 : 1 }],
       };
     });
 
     vi.doMock('../../src/core/usage.js', () => ({
-      refreshUsage: vi.fn(async () => ({ source: 'skilled', records: 1 })),
+      refreshUsage: vi.fn(async () => ({ source: 'native', records: 1, collectors: [] })),
       usageBySlug: vi.fn(
         async () =>
           new Map([
@@ -70,10 +70,11 @@ describe('getScopeRecommendations', () => {
 
     expect(first).toEqual(second);
     expect(first.recommendations.map((recommendation) => recommendation.action)).toEqual(['promote-global']);
-    expect(usageDetail).toHaveBeenCalledTimes(5);
+    expect(usageDetail).toHaveBeenCalledTimes(10);
+    expect(usageDetail).toHaveBeenCalledWith('review', projectRoot);
   });
 
-  it('does not infer recommendations when skilled is unavailable', async () => {
+  it('does not infer recommendations without native evidence', async () => {
     vi.doMock('../../src/core/usage.js', () => ({
       refreshUsage: vi.fn(async () => ({ source: 'meta', records: 0 })),
       usageBySlug: vi.fn(async () => new Map()),

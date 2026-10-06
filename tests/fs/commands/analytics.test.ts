@@ -107,4 +107,17 @@ describe('analyticsCommand', () => {
       },
     });
   });
+
+  it('reports persisted search selections without refreshing agent histories', async () => {
+    const { recordSkillSearch, recordMcpLoad } = await import('../../../src/core/usage-store.js');
+    await recordSkillSearch('review code', ['review'], { sessionId: 's' });
+    await recordMcpLoad('review', { sessionId: 's' });
+    const { analyticsCommand } = await import('../../../src/commands/analytics.js');
+    await analyticsCommand({ json: true, searches: true });
+    expect(JSON.parse(stdoutData.join(''))).toMatchObject({
+      searches: 1,
+      selected: 1,
+      recent: [{ query: 'review code', selectedSlug: 'review' }],
+    });
+  });
 });

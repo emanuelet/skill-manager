@@ -1,14 +1,5 @@
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
-import { createRequire } from 'node:module';
-import type { DatabaseSync as Database } from 'node:sqlite';
-import fs from 'fs-extra';
-import { SM_HOME, SM_SEARCH_DB } from '../fs/paths.js';
-import { listSkills } from './skill.js';
-
-const execFileAsync = promisify(execFile);
-const { DatabaseSync } = createRequire(import.meta.url)('node:sqlite') as typeof import('node:sqlite');
-const SKILLED_TIMEOUT_MS = 5_000;
+import { openUsageDb } from './usage-store.js';
+import { collectAgentUsage, type CollectorStatus } from './usage-collectors.js';
 
 export interface UsageRecord {
   slug: string;
@@ -27,67 +18,32 @@ export interface UsageDetail {
   projects: Array<{ name: string; count: number }>;
 }
 
-async function openUsageDb(): Promise<Database> {
-  await fs.ensureDir(SM_HOME);
-  const db = new DatabaseSync(SM_SEARCH_DB);
-  db.exec(
-    'CREATE TABLE IF NOT EXISTS skill_usage (slug TEXT PRIMARY KEY, use_count INTEGER NOT NULL DEFAULT 0, sessions INTEGER NOT NULL DEFAULT 0, projects INTEGER NOT NULL DEFAULT 0, last_used TEXT, synced_at TEXT NOT NULL)',
-  );
-  return db;
-}
-
-export async function refreshUsage(): Promise<{ source: 'skilled' | 'meta'; records: number }> {
-  let source: 'skilled' | 'meta' = 'skilled';
-  let records: UsageRecord[];
-  try {
-    const { stdout } = await execFileAsync('skilled', ['list', '--sort', 'count', '--no-index', '--json'], {
-      maxBuffer: 5 * 1024 * 1024,
-      timeout: SKILLED_TIMEOUT_MS,
-    });
-    const parsed: unknown = JSON.parse(stdout);
-    if (!Array.isArray(parsed)) throw new Error('Expected JSON array');
-    records = parsed.map((value) => {
-      const row = value as Record<string, unknown>;
-      const slug = row.name ?? row.skill;
-      if (typeof slug !== 'string') throw new Error('Missing skill name');
-      return {
-        slug,
-        useCount: Number(row.count ?? 0),
-        sessions: Number(row.sessions ?? 0),
-        projects: Number(row.projects ?? 0),
-        lastUsed: typeof row.lastUsed === 'string' ? row.lastUsed : undefined,
-      };
-    });
-  } catch {
-    source = 'meta';
-    records = (await listSkills()).map((skill) => ({
-      slug: skill.slug,
-      useCount: skill.meta.usageCount ?? 0,
-      sessions: 0,
-      projects: 0,
-      lastUsed: skill.meta.lastUsed,
-    }));
-  }
+export async function refreshUsage(): Promise<{
+  source: 'native' | 'meta';
+  records: number;
+  collectors: CollectorStatus[];
+}> {
   const db = await openUsageDb();
   try {
-    const insert = db.prepare('INSERT OR REPLACE INTO skill_usage VALUES (?, ?, ?, ?, ?, ?)');
-    const now = new Date().toISOString();
-    for (const record of records)
-      insert.run(record.slug, record.useCount, record.sessions, record.projects, record.lastUsed ?? null, now);
+    const collectors = await collectAgentUsage(db);
+    const { records } = db.prepare('SELECT COUNT(*) AS records FROM valid_usage_events').get() as { records: number };
+    // A missing/corrupt provider never deletes previous native or MCP evidence.
+    return {
+      source: records || collectors.some((status) => status.status === 'available') ? 'native' : 'meta',
+      records,
+      collectors,
+    };
   } finally {
     db.close();
   }
-  return { source, records: records.length };
 }
 
 export async function usageBySlug(): Promise<Map<string, UsageRecord>> {
   const db = await openUsageDb();
   try {
-    const rows = db.prepare('SELECT slug, use_count, sessions, projects, last_used FROM skill_usage').all() as Array<
-      Record<string, unknown>
-    >;
-    return new Map(
-      rows.map((row) => [
+    const legacy = db.prepare('SELECT slug, use_count, sessions, projects, last_used FROM skill_usage').all();
+    const result = new Map(
+      legacy.map((row) => [
         String(row.slug),
         {
           slug: String(row.slug),
@@ -98,34 +54,64 @@ export async function usageBySlug(): Promise<Map<string, UsageRecord>> {
         },
       ]),
     );
+    const rows = db
+      .prepare(
+        `SELECT slug, COUNT(*) AS uses, COUNT(DISTINCT source || ':' || session) AS sessions,
+      COUNT(DISTINCT project) AS projects, MAX(timestamp) AS last_used FROM valid_usage_events GROUP BY slug`,
+      )
+      .all();
+    for (const row of rows)
+      result.set(String(row.slug), {
+        slug: String(row.slug),
+        useCount: Number(row.uses),
+        sessions: Number(row.sessions),
+        projects: Number(row.projects),
+        lastUsed: new Date(Number(row.last_used)).toISOString(),
+      });
+    return result;
   } finally {
     db.close();
   }
 }
 
-/** Read detailed, optionally project-filtered usage from skilled. */
+/** Local indexed detail: full canonical project paths, never ambiguous basenames. */
 export async function usageDetail(slug: string, project?: string): Promise<UsageDetail> {
-  const args = ['detail', slug, '--no-index', '--json'];
-  if (project) args.push('--project', project);
-
-  const { stdout } = await execFileAsync('skilled', args, {
-    maxBuffer: 5 * 1024 * 1024,
-    timeout: SKILLED_TIMEOUT_MS,
-  });
-  const parsed = JSON.parse(stdout) as Record<string, unknown>;
-  if (typeof parsed.skill !== 'string') throw new Error('Missing skill name');
-  const projects = Array.isArray(parsed.projects) ? parsed.projects : [];
-
-  return {
-    skill: parsed.skill,
-    count: Number(parsed.count ?? 0),
-    sessions: Number(parsed.sessions ?? 0),
-    firstUsed: typeof parsed.firstUsed === 'string' ? parsed.firstUsed : undefined,
-    lastUsed: typeof parsed.lastUsed === 'string' ? parsed.lastUsed : undefined,
-    projects: projects.flatMap((value) => {
-      if (!value || typeof value !== 'object') return [];
-      const row = value as Record<string, unknown>;
-      return typeof row.name === 'string' ? [{ name: row.name, count: Number(row.count ?? 0) }] : [];
-    }),
-  };
+  const db = await openUsageDb();
+  try {
+    const filter = project ? 'slug = ? AND project = ?' : 'slug = ?';
+    const args = project ? [slug, project] : [slug];
+    const row = db
+      .prepare(
+        `SELECT COUNT(*) AS count, COUNT(DISTINCT source || ':' || session) AS sessions,
+      MIN(timestamp) AS first_used, MAX(timestamp) AS last_used FROM valid_usage_events WHERE ${filter}`,
+      )
+      .get(...args)!;
+    const projects = db
+      .prepare(
+        `SELECT project AS name, COUNT(*) AS count FROM valid_usage_events
+      WHERE ${filter} AND project IS NOT NULL GROUP BY project ORDER BY count DESC, project`,
+      )
+      .all(...args);
+    if (!project && Number(row.count) === 0) {
+      const legacy = db.prepare('SELECT use_count, sessions, last_used FROM skill_usage WHERE slug = ?').get(slug);
+      if (legacy)
+        return {
+          skill: slug,
+          count: Number(legacy.use_count),
+          sessions: Number(legacy.sessions),
+          lastUsed: typeof legacy.last_used === 'string' ? legacy.last_used : undefined,
+          projects: [],
+        };
+    }
+    return {
+      skill: slug,
+      count: Number(row.count),
+      sessions: Number(row.sessions),
+      firstUsed: row.first_used ? new Date(Number(row.first_used)).toISOString() : undefined,
+      lastUsed: row.last_used ? new Date(Number(row.last_used)).toISOString() : undefined,
+      projects: projects.map((value) => ({ name: String(value.name), count: Number(value.count) })),
+    };
+  } finally {
+    db.close();
+  }
 }

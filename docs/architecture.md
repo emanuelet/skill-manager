@@ -17,7 +17,7 @@ src/
 │   ├── hash.ts          → SHA-256 content hashing
 │   ├── dedup.ts         → Duplicate skill detection
 │   ├── analytics.ts     → Usage stats, stale/unused skill detection
-│   ├── analytics-snapshot.ts → Cached canonical and skilled telemetry snapshot
+│   ├── analytics-snapshot.ts → Canonical, native/MCP usage, and search outcomes
 │   ├── versioning.ts    → Content-hash version snapshots (.sm-history.json)
 │   ├── deps.ts          → Dependency graph with cycle detection
 │   ├── triggers.ts      → File/directory-based skill activation triggers
@@ -119,9 +119,9 @@ All symlink operations use an atomic temp-then-rename pattern (`src/fs/links.ts`
 
 ### Tool Directories
 
-| Tool        | Skill Format               | Legacy Format                  |
-| ----------- | -------------------------- | ------------------------------ |
-| Claude Code | `~/.claude/skills/<slug>/` | `~/.claude/commands/<slug>.md` |
+| Tool                   | Skill Format               | Legacy Format                                    |
+| ---------------------- | -------------------------- | ------------------------------------------------ |
+| Claude Code            | `~/.claude/skills/<slug>/` | `~/.claude/commands/<slug>.md`                   |
 | Codex CLI and OpenCode | `~/.agents/skills/<slug>/` | `~/.codex/prompts/<slug>.md` (Codex legacy only) |
 
 ### Dependencies

@@ -23,7 +23,10 @@ interface IndexedSkill {
   text: string;
 }
 
-function similarity(left: string | ArrayLike<unknown> | null | undefined, right: string | ArrayLike<unknown> | null | undefined): number {
+function similarity(
+  left: string | ArrayLike<unknown> | null | undefined,
+  right: string | ArrayLike<unknown> | null | undefined,
+): number {
   const a = String(left ?? '').toLowerCase();
   const b = String(right ?? '').toLowerCase();
   if (!a || !b) return 0;
@@ -41,12 +44,18 @@ function similarity(left: string | ArrayLike<unknown> | null | undefined, right:
 }
 
 function tokens(query: string): string[] {
-  return query.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').match(/[\p{L}\p{N}]+/gu) ?? [];
+  return (
+    query
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .match(/[\p{L}\p{N}]+/gu) ?? []
+  );
 }
 
 async function openDb(): Promise<Database> {
   await fs.ensureDir(SM_HOME);
   const db = new DatabaseSync(SM_SEARCH_DB);
+  db.exec('PRAGMA busy_timeout = 5000; PRAGMA journal_mode = WAL;');
   db.exec(`
     CREATE TABLE IF NOT EXISTS search_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);
     CREATE VIRTUAL TABLE IF NOT EXISTS skills_fts USING fts5(
@@ -62,10 +71,20 @@ export async function rebuildSearchIndex(): Promise<void> {
   const db = await openDb();
   try {
     db.exec('BEGIN IMMEDIATE; DELETE FROM skills_fts;');
-    const insert = db.prepare('INSERT INTO skills_fts (slug, name, description, tags, aliases, intents, content) VALUES (?, ?, ?, ?, ?, ?, ?)');
+    const insert = db.prepare(
+      'INSERT INTO skills_fts (slug, name, description, tags, aliases, intents, content) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    );
     for (const skill of skills) {
       const frontmatter = skill.content.frontmatter;
-      insert.run(skill.slug, skill.name, skill.description, skill.tags.join(' '), (frontmatter.aliases ?? []).join(' '), (frontmatter.intents ?? []).join(' '), skill.content.content);
+      insert.run(
+        skill.slug,
+        skill.name,
+        skill.description,
+        skill.tags.join(' '),
+        (frontmatter.aliases ?? []).join(' '),
+        (frontmatter.intents ?? []).join(' '),
+        skill.content.content,
+      );
     }
     db.exec("INSERT OR REPLACE INTO search_meta VALUES ('indexed_at', datetime('now')); COMMIT;");
   } catch (error) {
@@ -86,14 +105,30 @@ export async function searchSkills(query: string, limit = 20): Promise<SearchHit
   const ranks = new Map<string, number>();
   try {
     const expression = queryTokens.map((token) => `"${token.replace(/"/g, '""')}"*`).join(' OR ');
-    const lexical = db.prepare('SELECT slug FROM skills_fts WHERE skills_fts MATCH ? ORDER BY bm25(skills_fts, 8, 4, 2, 2, 2, 1) LIMIT 100').all(expression) as Array<{ slug: string }>;
+    const lexical = db
+      .prepare(
+        'SELECT slug FROM skills_fts WHERE skills_fts MATCH ? ORDER BY bm25(skills_fts, 8, 4, 2, 2, 2, 1) LIMIT 100',
+      )
+      .all(expression) as Array<{ slug: string }>;
     lexical.forEach((row, index) => ranks.set(row.slug, 1 / (RRF_K + index + 1)));
   } finally {
     db.close();
   }
-  const indexed: IndexedSkill[] = skills.map((skill) => ({ skill, text: `${skill.slug} ${skill.name} ${skill.tags.join(' ')} ${skill.description}` }));
-  const fuzzyCandidates = indexed.flatMap((row) => row.text.split(/[^\p{L}\p{N}]+/u).filter(Boolean).map((text) => ({ slug: row.skill.slug, text })));
-  const fuzzy = search(query, fuzzyCandidates.map((row) => row.text), { scorer: FUZZY_SCORER, threshold: 55, limit: 100 });
+  const indexed: IndexedSkill[] = skills.map((skill) => ({
+    skill,
+    text: `${skill.slug} ${skill.name} ${skill.tags.join(' ')} ${skill.description}`,
+  }));
+  const fuzzyCandidates = indexed.flatMap((row) =>
+    row.text
+      .split(/[^\p{L}\p{N}]+/u)
+      .filter(Boolean)
+      .map((text) => ({ slug: row.skill.slug, text })),
+  );
+  const fuzzy = search(
+    query,
+    fuzzyCandidates.map((row) => row.text),
+    { scorer: FUZZY_SCORER, threshold: 55, limit: 100 },
+  );
   const fuzzySlugs = new Set<string>();
   for (let index = 0; index < fuzzy.length; index++) {
     const slug = fuzzyCandidates[fuzzy[index].key as number]?.slug;
@@ -108,7 +143,13 @@ export async function searchSkills(query: string, limit = 20): Promise<SearchHit
     .filter((row) => row.skill)
     .sort((a, b) => b.score - a.score || a.skill.slug.localeCompare(b.skill.slug))
     .slice(0, Math.min(Math.max(limit, 1), 100))
-    .map(({ skill, score }) => ({ slug: skill.slug, name: skill.name, description: skill.description, tags: skill.tags, score }));
+    .map(({ skill, score }) => ({
+      slug: skill.slug,
+      name: skill.name,
+      description: skill.description,
+      tags: skill.tags,
+      score,
+    }));
 }
 
 function usageMultiplier(usage: { useCount: number; lastUsed?: string } | undefined): number {
