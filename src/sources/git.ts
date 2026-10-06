@@ -1,4 +1,4 @@
-import simpleGit from 'simple-git';
+import { simpleGit } from 'simple-git';
 import fs from 'fs-extra';
 import path from 'path';
 import { SM_SOURCES_DIR } from '../fs/paths.js';
@@ -21,9 +21,7 @@ function isGitNotFoundError(err: unknown): boolean {
 
 function throwIfGitMissing(err: unknown): never {
   if (isGitNotFoundError(err)) {
-    throw new SourceError(
-      'Git is not installed or not in PATH. Install git from https://git-scm.com and try again.',
-    );
+    throw new SourceError('Git is not installed or not in PATH. Install git from https://git-scm.com and try again.');
   }
   throw err;
 }

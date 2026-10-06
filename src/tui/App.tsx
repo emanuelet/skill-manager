@@ -70,7 +70,7 @@ function App() {
         // Non-critical
       }
     })();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // oxlint-disable-line react/exhaustive-deps
 
   // Global key bindings
   useInput((input, key) => {

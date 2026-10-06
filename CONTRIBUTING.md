@@ -10,7 +10,13 @@ pnpm build
 pnpm link --global # makes `sm` available globally
 ```
 
-Requires Node.js 20+. Use `npm run dev` for watch mode during development.
+Requires Node.js 24+ and pnpm 12.9.0 (pinned in `package.json` and `mise.toml`).
+Run `mise install` to install the project tools, then use `pnpm dev` for watch mode.
+
+Type checking uses TypeScript 7 via the `@typescript/native` alias (`tsc`).
+The `typescript` dependency aliases `@typescript/typescript6` to provide the
+TypeScript 6 API required by build tooling (`tsc6`). Keep both aliases
+when updating dependencies; TypeScript 7 does not provide the compatible API.
 
 ## Project Structure
 
@@ -46,6 +52,7 @@ pnpm test:watch                   # watch mode
 - **Logging** goes to stderr via `src/utils/logger.ts`; CLI output goes to stdout
 - **JSX** uses React 19 automatic runtime (`react-jsx` transform)
 - Type-check with `pnpm lint` (`tsc --noEmit`)
+- Lint with `pnpm lint:oxlint`; rules are configured in `.oxlintrc.json`
 
 ## Pull Request Process
 

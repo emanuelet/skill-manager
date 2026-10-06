@@ -59,7 +59,7 @@ export function SourcesScreen({ onNavigate, onRefresh, onTextInputChange, onStep
   // Report step changes to parent for help overlay filtering
   useEffect(() => {
     onStepChange?.(step);
-  }, [step]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [step]); // oxlint-disable-line react/exhaustive-deps
 
   // Debounce escape in the adding step to prevent bracketed paste mode
   // from triggering exit (\x1b can arrive as a separate stdin chunk).

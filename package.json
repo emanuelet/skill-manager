@@ -21,6 +21,7 @@
     "mcp"
   ],
   "type": "module",
+  "packageManager": "pnpm@12.9.0",
   "files": [
     "dist/",
     "packs/",
@@ -37,7 +38,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "tsc --noEmit",
-    "lint:eslint": "eslint src/ bin/",
+    "lint:oxlint": "oxlint src/ bin/",
     "format": "prettier --write \"src/**/*.{ts,tsx}\" \"bin/**/*.ts\" \"tests/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx}\" \"bin/**/*.ts\" \"tests/**/*.ts\"",
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
@@ -49,29 +50,29 @@
     "node": ">=24"
   },
   "dependencies": {
-    "@avcodes/skilled": "0.4.0",
+    "@avcodes/skilled": "0.4.1",
     "@iarna/toml": "^2.2.5",
     "@inkjs/ui": "^2.0.0",
-    "@modelcontextprotocol/server": "^2.0.0",
-    "chalk": "^6.0.0",
+    "@modelcontextprotocol/server": "^2.3.0",
+    "chalk": "^6.0.1",
     "commander": "^15.0.0",
     "fast-glob": "^3.3.3",
-    "fs-extra": "^11.4.0",
+    "fs-extra": "^11.4.1",
     "fullscreen-ink": "^0.1.0",
     "gray-matter": "^4.0.3",
     "ink": "^7.1.1",
     "keyv": "^5.6.0",
     "keyv-file": "^5.3.5",
-    "marked": "^18.0.13",
-    "rapidfuzz-js": "0.12.0",
+    "marked": "^18.0.14",
+    "rapidfuzz-js": "0.13.0",
     "react": "^19.3.0",
-    "simple-git": "^3.36.0",
+    "simple-git": "^4.0.2",
     "zod": "^4.6.5"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
       "prettier --write",
-      "eslint --fix"
+      "oxlint --fix"
     ],
     "*.{json,md,yml,yaml}": [
       "prettier --write"
@@ -79,20 +80,16 @@
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
-    "@types/node": "^26.6.2",
+    "@types/node": "^26.6.4",
     "@types/react": "^19.3.0",
-    "@typescript-eslint/eslint-plugin": "^8.70.0",
-    "@typescript-eslint/parser": "^8.70.0",
-    "eslint": "^10.11.0",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-react-hooks": "^7.1.1",
+    "@typescript/native": "npm:typescript@^7.0.2",
     "husky": "^9.1.7",
     "ink-testing-library": "^4.0.0",
-    "lint-staged": "^17.5.1",
-    "prettier": "^3.9.8",
+    "lint-staged": "^17.6.0",
+    "oxlint": "^1.86.0",
+    "prettier": "^3.9.9",
     "tsup": "^8.5.1",
-    "typescript": "^6.x",
-    "typescript-eslint": "^8.70.0",
-    "vitest": "^5.0.1"
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "vitest": "^5.0.3"
   }
 }

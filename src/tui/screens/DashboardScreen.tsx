@@ -59,7 +59,7 @@ export function DashboardScreen({
 
   useEffect(() => {
     onSelectIndex(0);
-  }, [searchQuery]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [searchQuery]); // oxlint-disable-line react/exhaustive-deps
 
   const inputActive = useContext(InputActiveContext);
   const { height, width } = useContext(ScreenSizeContext);

@@ -65,7 +65,7 @@ async function createTestSkill(
 
 describe('MCP resource templates', () => {
   describe('skill resource template', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line typescript/no-explicit-any
     function getTemplateEntry(server: unknown, name: string): any {
       return (server as Record<string, Record<string, unknown>>)._registeredResourceTemplates[name];
     }

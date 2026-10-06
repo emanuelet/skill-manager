@@ -1,5 +1,8 @@
 export class SmError extends Error {
-  constructor(message: string, public readonly code: string) {
+  constructor(
+    message: string,
+    public readonly code: string,
+  ) {
     super(message);
     this.name = 'SmError';
   }
@@ -91,9 +94,9 @@ export function validateSlug(raw: string): void {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// oxlint-disable-next-line typescript/no-explicit-any
 export function withErrorHandler<T extends (...args: any[]) => Promise<void>>(fn: T): T {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line typescript/no-explicit-any
   return (async (...args: any[]) => {
     try {
       await fn(...args);
