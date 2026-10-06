@@ -200,7 +200,7 @@ When installing skills that already exist locally, `sm install` compares content
 
 ### Bifrost
 
-Bifrost is an HTTP synchronization endpoint, separate from Git-backed `sm source` entries. Sync it with:
+Bifrost is an LLM gateway https://github.com/maximhq/bifrost, that has a skills repository https://docs.getbifrost.ai/features/skills-repository#skills-repository, separate from Git-backed `sm source` entries. Sync it with:
 
 ```bash
 # Use BIFROST_URL, or http://localhost:8090 when it is unset
