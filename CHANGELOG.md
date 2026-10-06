@@ -9,13 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Changed
 
+- Replaced the `skilled` dependency with internal local-history collectors and a native/MCP usage ledger
+- Migrated project tooling to pnpm 12, TypeScript 7 with the TS6 tooling API, and Oxlint
+- Removed the shared file-backed analytics cache so new MCP activity is immediately visible
 - Renamed the shared Codex CLI/OpenCode deployment target from `codex` to `agents`; legacy `codex` configuration and state values are normalized automatically
 - Moved Bifrost synchronization to `sm source bifrost sync`
 
 ### Added
 
+- Usage extraction for Claude Code, OpenCode, Codex, Grok, and Droid, including supported historical MCP loads
+- Exact MCP search queries, ranked results, and same-session search-to-load selection tracking; inspect with `sm analytics --searches`
+- `usage_event_id` in content-bearing MCP responses to reconcile live loads with historical traces without double-counting
+- Source/client usage breakdowns and collector diagnostics in MCP analytics
 - `triggers.always` for low-confidence skill suggestions in every project
 - Pagination for MCP `list_skills` and `suggest_skills` responses
+
+### Fixed
+
+- Preserve recorded usage when a provider is unavailable or malformed
+- Avoid duplicate Codex counts after archival and preserve fork session metadata
+- Use canonical project paths for scope details and indexed usage for doctor checks
+- Release script now verifies Oxlint and maintains the pnpm lockfile
 
 ## [1.1.0] - 2026-09-14
 

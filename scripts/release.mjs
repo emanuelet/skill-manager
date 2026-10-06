@@ -154,9 +154,10 @@ function main() {
   // Step 1: Preflight checks
   if (!noVerify) {
     console.log('Running preflight checks...\n');
-    run('npm run lint');
-    run('npm run build');
-    run('npm test');
+    run('pnpm lint');
+    run('pnpm lint:oxlint');
+    run('pnpm build');
+    run('pnpm test');
     console.log('\nPreflight checks passed.\n');
   }
 
@@ -164,7 +165,7 @@ function main() {
   pkg.version = newVersion;
   writeFileSync(PKG_PATH, JSON.stringify(pkg, null, 2) + '\n');
   console.log(`Updated package.json to ${newVersion}`);
-  run('npm install --package-lock-only --ignore-scripts');
+  run('pnpm install --lockfile-only --ignore-scripts');
 
   // Step 3: Update CHANGELOG.md
   const updatedChangelog = updateChangelog(newVersion);
@@ -172,7 +173,7 @@ function main() {
   console.log(`Updated CHANGELOG.md with [${newVersion}] section`);
 
   // Step 4: Git commit (pathspec-only — never includes unrelated staged files)
-  run(`git commit -m "chore: release v${newVersion}" -- package.json package-lock.json CHANGELOG.md`);
+  run(`git commit -m "chore: release v${newVersion}" -- package.json pnpm-lock.yaml CHANGELOG.md`);
   console.log(`Created commit: chore: release v${newVersion}`);
 
   // Step 5: Git tag
