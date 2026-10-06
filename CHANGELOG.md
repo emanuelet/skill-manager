@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-10-06
 ### Changed
 
 - Replaced the `skilled` dependency with internal local-history collectors and a native/MCP usage ledger
