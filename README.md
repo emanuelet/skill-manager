@@ -202,13 +202,53 @@ When installing skills that already exist locally, `sm install` compares content
 
 Bifrost is an LLM gateway https://github.com/maximhq/bifrost, that has a skills repository https://docs.getbifrost.ai/features/skills-repository#skills-repository, separate from Git-backed `sm source` entries. Sync it with:
 
+Configure its endpoint and authentication once:
+
 ```bash
-# Use BIFROST_URL, or http://localhost:8090 when it is unset
+# Interactive setup: prompts for URL/authentication and hides secret input
+sm source bifrost setup
+
+# Custom gateway with admin Basic authentication; prompts for the password
+sm source bifrost setup --url https://bifrost.example.com --auth basic --username admin
+
+# Management API key/session token, or the OSS setup token
+sm source bifrost setup --url https://bifrost.example.com --auth bearer
+sm source bifrost setup --url http://localhost:8090 --auth setup-token
+
+# Automation: read a secret from an already-populated variable and save it locally
+sm source bifrost setup --url https://bifrost.example.com --auth bearer --token-env BIFROST_MANAGEMENT_TOKEN
+```
+
+Settings, including plaintext credentials, are saved in `~/.skill-manager/config.toml`
+(or `$SM_HOME/config.toml`) with owner-only permissions (`0600`). `--password-env`
+and `--token-env` read values during setup; later syncs reuse the saved values.
+Use `--auth none` to remove authentication. Setup changes connection settings only;
+it does not synchronize or auto-adopt skills.
+
+Basic admin credentials and bearer **management** API keys/session tokens are accepted
+by the Skills management API. Inference virtual keys (`sk-bf-*`) are not accepted there.
+`setup-token` sends `X-Bifrost-Setup-Token` for the OSS setup lock before dashboard
+authentication is enabled. See [Bifrost management authentication](https://docs.getbifrost.ai/api-reference/skills/list-skills).
+
+```bash
+# Use saved setup settings (or localhost:8090 if none are saved)
 sm source bifrost sync
 
 # Use an explicit Bifrost endpoint
 sm source bifrost sync --url https://bifrost.example.com
+
+# Import one remote skill only after reviewing its security finding
+sm source bifrost sync --trust reviewed-skill
 ```
+
+URL precedence: `--url` → `BIFROST_URL` → saved URL → `http://localhost:8090`.
+Saved credentials are bound to the saved URL and are not sent to a different override.
+Changing the URL during setup defaults the new endpoint to unauthenticated mode unless
+you configure new credentials. Authenticated requests do not follow redirects; configure
+the final gateway URL, including any reverse-proxy base path.
+`--trust` is limited to the current sync and only bypasses scanning for the named remote skill.
+Local skill names that Bifrost cannot accept (lowercase letters, numbers, and single hyphens only) are skipped without renaming.
+Untrusted content is blocked only for imperative override instructions or role markup; references to system prompts in documentation are allowed.
 
 The command reconciles remote and canonical skills by update time, deploys pulled skills to configured targets, and stores its synchronization state in `~/.skill-manager/bifrost.json`. Equal timestamps preserve the local copy under `~/.skill-manager/conflicts/bifrost/` and prefer Bifrost.
 

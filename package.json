@@ -1,6 +1,6 @@
 {
   "name": "skill-manager-plus",
-  "version": "1.3.0",
+  "version": "1.3.7",
   "description": "Unified skill manager for Claude Code, Codex CLI, and OpenCode",
   "license": "MIT",
   "author": "Omri Kaisari",

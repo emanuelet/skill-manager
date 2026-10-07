@@ -404,8 +404,23 @@ source
 
 const bifrost = source.command('bifrost').description('Synchronize the Bifrost skill source');
 bifrost
+  .command('setup')
+  .description('Save the Bifrost base URL and authentication; prompt for missing values in a terminal')
+  .option('--url <url>', 'Bifrost base URL')
+  .option('--auth <type>', 'Authentication: none, basic, bearer, or setup-token')
+  .option('--username <username>', 'Basic authentication admin username')
+  .option('--password-env <name>', 'Read the password from this environment variable and save it locally')
+  .option('--token-env <name>', 'Read the management/setup token from this environment variable and save it locally')
+  .action(
+    withErrorHandler(async (opts) => {
+      const { bifrostSetupCommand } = await import('../src/commands/bifrost.js');
+      await bifrostSetupCommand(opts);
+    }),
+  );
+bifrost
   .command('sync')
   .option('--url <url>', 'Bifrost base URL')
+  .option('--trust <name...>', 'Trust named remote skill(s) for this sync after reviewing security findings')
   .action(
     withErrorHandler(async (opts) => {
       const { bifrostSyncCommand } = await import('../src/commands/bifrost.js');
@@ -559,6 +574,13 @@ generateOpts(generate.command('both').description('Generate both CLAUDE.md and A
 program.hook('preAction', async (_thisCommand, actionCommand) => {
   // Skip TUI — it handles adopt internally via useEffect
   if (!actionCommand.parent) return;
+  // Connection setup must not import/deploy skills before validation or prompting.
+  if (
+    actionCommand.name() === 'setup' &&
+    actionCommand.parent.name() === 'bifrost' &&
+    actionCommand.parent.parent?.name() === 'source'
+  )
+    return;
   // Skip side-effect-free command groups (walk parent chain, excluding root)
   const skip = new Set(['completion', 'mcp']);
   let cmd: Command | null = actionCommand;

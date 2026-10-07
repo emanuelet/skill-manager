@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.3.7] - 2026-10-07
+
+### Fixed
+
+- Avoid Bifrost sync false positives for documentation references to system prompts and quoted rejection rules
+- Derive Bifrost update versions from `highest_version` when a newer unserved version exists
+
+## [1.3.6] - 2026-10-07
+
+### Fixed
+
+- Skip local skill names that cannot be published to Bifrost without renaming
+
+## [1.3.5] - 2026-10-07
+
+### Added
+
+- `sm source bifrost sync --trust <skill>` permits one reviewed remote skill for the current sync without disabling checks for other skills
+
+## [1.3.4] - 2026-10-07
+
+### Fixed
+
+- Exclude dependency and build artifacts from Bifrost skill attachments
+
+## [1.3.3] - 2026-10-07
+
+### Fixed
+
+- Continue Bifrost synchronization when an attachment exceeds the server upload limit, reporting the skipped skill and file
+
+## [1.3.2] - 2026-10-07
+
+### Fixed
+
+- Allow local Bifrost attachment uploads above the remote import size guard
+
+## [1.3.1] - 2026-10-07
+
+### Added
+
+- `sm source bifrost setup` persists a custom endpoint and none/Basic/management-bearer/OSS setup-token authentication with hidden secret input and owner-only config permissions
+
+### Fixed
+
+- Bifrost sync authenticates all management and attachment requests while keeping JSON and multipart content types intact
+- Saved credentials remain bound to their endpoint; authentication errors redact secrets and setup does not auto-adopt skills
+
 ## [1.3.0] - 2026-10-06
 ### Changed
 
